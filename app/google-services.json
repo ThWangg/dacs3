@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "346068827035",
+    "project_id": "dacs3-78195",
+    "storage_bucket": "dacs3-78195.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:346068827035:android:30e81c7224222bc094bf3e",
+        "android_client_info": {
+          "package_name": "ltdd.dacsba.groceries"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdITiGtH4i1tkpu7Smiq19_v5uKu9K-Hk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
