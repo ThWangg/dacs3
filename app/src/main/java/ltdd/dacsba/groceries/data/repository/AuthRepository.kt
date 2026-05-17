@@ -38,7 +38,14 @@ class AuthRepository {
                 .await()
             val userData = document.toObject(User::class.java)
 
-            if(userData != null) {Result.success(userData)}
+            if (userData != null) {
+                // Kiểm tra tài khoản có bị khóa không
+                if (userData.isDeactivated) {
+                    auth.signOut()  // Đăng xuất ngay khỏi Firebase Auth
+                    throw Exception("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.")
+                }
+                Result.success(userData)
+            }
             else throw Exception("User data not found")
             }
         catch (e: Exception){

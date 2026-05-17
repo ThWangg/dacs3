@@ -39,10 +39,13 @@ fun LoginScreen( //logic
 
     LaunchedEffect(loginSuccess) {
         loginSuccess?.let { user ->
-            if (user.role == AppConstant.Roles.ADMIN) {
-                navController.navigate(AppConstant.Routes.ADMIN_HOME)
-            } else {
-                navController.navigate(AppConstant.Routes.BUYER_HOME)
+            val route = when (user.role) {
+                AppConstant.Roles.ADMIN  -> AppConstant.Routes.ADMIN_HOME
+                AppConstant.Roles.SELLER -> AppConstant.Routes.SELLER_HOME
+                else                     -> AppConstant.Routes.BUYER_HOME
+            }
+            navController.navigate(route) {
+                popUpTo(AppConstant.Routes.LOGIN) { inclusive = true }
             }
         }
     }

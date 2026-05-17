@@ -6,6 +6,7 @@ object AppConstant {
     const val COLLECTION_PRODUCTS = "products"
     const val COLLECTION_ORDERS = "orders"
     const val COLLECTION_CATEGORIES = "categories"
+    const val COLLECTION_SELLER_REQUESTS = "seller_requests"
 
     object Roles {
         const val ADMIN = "ADMIN"
