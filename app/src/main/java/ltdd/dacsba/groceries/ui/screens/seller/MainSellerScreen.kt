@@ -1,8 +1,10 @@
 package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.foundation.layout.padding
@@ -22,6 +24,8 @@ object SellerRoutes {
     const val DASHBOARD = "seller_dashboard"
     const val PRODUCTS = "seller_products"
     const val ORDERS = "seller_orders"
+    const val CHAT = "seller_chat"
+    const val STATS = "seller_stats"
     const val PROFILE = "seller_profile"
 }
 
@@ -32,8 +36,10 @@ fun MainSellerScreen() {
 
     val bottomNavItems = listOf(
         BottomNavItem("Dashboard", SellerRoutes.DASHBOARD, Icons.Default.Home),
-        BottomNavItem("Products", SellerRoutes.PRODUCTS, Icons.Default.ShoppingCart),
-        BottomNavItem("Orders", SellerRoutes.ORDERS, Icons.Default.List),
+        BottomNavItem("Sản phẩm", SellerRoutes.PRODUCTS, Icons.Default.ShoppingCart),
+        BottomNavItem("Đơn hàng", SellerRoutes.ORDERS, Icons.AutoMirrored.Filled.List),
+        BottomNavItem("Chat", SellerRoutes.CHAT, Icons.AutoMirrored.Filled.Chat),
+        BottomNavItem("Thống kê", SellerRoutes.STATS, Icons.Default.BarChart),
         BottomNavItem("Profile", SellerRoutes.PROFILE, Icons.Default.Person)
     )
 
@@ -68,6 +74,12 @@ fun MainSellerScreen() {
                     navController = navController,
                     viewModel = sellerViewModel
                 )
+            }
+            composable(SellerRoutes.CHAT) {
+                SellerChatScreen()
+            }
+            composable(SellerRoutes.STATS) {
+                SellerStatsScreen()
             }
             composable(SellerRoutes.PROFILE) {
                 SellerProfileScreen(navController = navController)

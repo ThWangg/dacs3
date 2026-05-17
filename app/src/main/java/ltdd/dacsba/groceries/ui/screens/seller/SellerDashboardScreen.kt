@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
@@ -159,7 +159,7 @@ fun SellerDashboardContent(
                     modifier = Modifier.weight(1f),
                     title = "Stock",
                     value = "99+",
-                    icon = Icons.Default.List,
+                    icon = Icons.AutoMirrored.Filled.List,
                     containerColor = Color(0xFFF3E5F5),
                     contentColor = Color(0xFF7B1FA2)
                 )
@@ -191,7 +191,7 @@ fun SellerDashboardContent(
                             color = Color(0xFFFFF9C4)
                         ) {
                             Icon(
-                                Icons.Default.List,
+                                Icons.AutoMirrored.Filled.List,
                                 contentDescription = null,
                                 modifier = Modifier.padding(8.dp),
                                 tint = Color(0xFFFBC02D)

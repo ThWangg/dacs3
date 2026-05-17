@@ -41,7 +41,7 @@ fun AppDropdown(
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
             },
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth(),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,

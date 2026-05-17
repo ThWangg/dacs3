@@ -6,11 +6,18 @@ object AppConstant {
     const val COLLECTION_PRODUCTS = "products"
     const val COLLECTION_ORDERS = "orders"
     const val COLLECTION_CATEGORIES = "categories"
+    const val COLLECTION_MESSAGES = "messages"
+    const val COLLECTION_CONVERSATIONS = "conversations"
 
     object Roles {
         const val ADMIN = "ADMIN"
         const val SELLER = "SELLER"
         const val BUYER = "BUYER"
+
+        // Trạng thái duyệt gian hàng của seller
+        const val SELLER_STATUS_PENDING = "PENDING"
+        const val SELLER_STATUS_APPROVED = "APPROVED"
+        const val SELLER_STATUS_REJECTED = "REJECTED"
     }
 
     object Routes {

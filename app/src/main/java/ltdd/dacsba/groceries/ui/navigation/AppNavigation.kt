@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import ltdd.dacsba.groceries.data.constant.AppConstant
+import ltdd.dacsba.groceries.ui.screens.admin.MainAdminScreen
 import ltdd.dacsba.groceries.ui.screens.login.LoginScreen
 import ltdd.dacsba.groceries.ui.screens.login.RegisterScreen
 import ltdd.dacsba.groceries.ui.screens.seller.MainSellerScreen
@@ -26,6 +27,11 @@ fun AppNavigation(navController: NavHostController) {
             RegisterScreen(navController = navController)
         }
 
+        // Admin main screen (có bottom bar tích hợp sẵn)
+        composable(AppConstant.Routes.ADMIN_HOME) {
+            MainAdminScreen()
+        }
+
         // Seller main screen (có bottom bar tích hợp sẵn)
         composable(AppConstant.Routes.SELLER_HOME) {
             MainSellerScreen()
@@ -40,4 +46,4 @@ fun AppNavigation(navController: NavHostController) {
             SellerEditProductScreen(navController = navController, productId = productId)
         }
     }
-}
+}

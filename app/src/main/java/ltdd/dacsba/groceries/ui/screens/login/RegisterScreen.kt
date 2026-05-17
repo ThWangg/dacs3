@@ -88,8 +88,12 @@ fun RegisterScreen(
                     username = u,
                     email = e,
                     role = r,
-                    // uid đc firebase tạo
-                    //createdAt
+                    // Nếu là seller thì cần duyệt trước khi được phép bán hàng
+                    sellerStatus = if (r == AppConstant.Roles.SELLER) {
+                        AppConstant.Roles.SELLER_STATUS_PENDING
+                    } else {
+                        ""
+                    }
                 )
 
                 authViewModel.register(newUser, p)
