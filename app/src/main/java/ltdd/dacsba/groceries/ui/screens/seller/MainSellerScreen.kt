@@ -12,9 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import ltdd.dacsba.groceries.data.constant.AppConstant
 import ltdd.dacsba.groceries.ui.components.AppBottomBar
 import ltdd.dacsba.groceries.ui.components.BottomNavItem
 
@@ -23,6 +26,9 @@ object SellerRoutes {
     const val PRODUCTS = "seller_products"
     const val ORDERS = "seller_orders"
     const val PROFILE = "seller_profile"
+    const val ADD_PRODUCT = "seller_add_product"
+    const val EDIT_PRODUCT = "seller_edit_product"
+    const val NOTIFICATIONS = "seller_notifications"
 }
 
 @Composable
@@ -71,6 +77,16 @@ fun MainSellerScreen() {
             }
             composable(SellerRoutes.PROFILE) {
                 SellerProfileScreen(navController = navController)
+            }
+            composable(AppConstant.Routes.SELLER_ADD_PRODUCT) {
+                SellerAddProductScreen(navController = navController, viewModel = sellerViewModel)
+            }
+            composable("${AppConstant.Routes.SELLER_EDIT_PRODUCT}/{productId}") { backStackEntry ->
+                val productId = backStackEntry.arguments?.getString("productId")
+                SellerEditProductScreen(navController = navController, productId = productId)
+            }
+            composable(SellerRoutes.NOTIFICATIONS) {
+                SellerNotificationScreen(navController = navController, viewModel = sellerViewModel)
             }
         }
     }

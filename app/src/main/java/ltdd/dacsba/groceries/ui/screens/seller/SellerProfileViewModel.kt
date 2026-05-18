@@ -1,22 +1,27 @@
 package ltdd.dacsba.groceries.ui.screens.seller
 
+import android.app.Application
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import ltdd.dacsba.groceries.data.constant.AppConstant
+import ltdd.dacsba.groceries.data.repository.ImageUtils
 
-
-class SellerProfileViewModel : ViewModel() {
+class SellerProfileViewModel(application: Application) : AndroidViewModel(application) {
+    private val context = application.applicationContext
 
     data class SellerProfileUiState(
         val username: String = "",
         val email: String = "",
         val shopName: String = "",
         val phone: String = "",
+        val avatarUrl: String = "",
+        val isUploadingAvatar: Boolean = false,
         val updateMessage: String? = null
     )
     private val auth = FirebaseAuth.getInstance()
@@ -53,6 +58,7 @@ class SellerProfileViewModel : ViewModel() {
                 val username = document.getString("username") ?: ""
                 val shopName = document.getString("shopName") ?: ""
                 val phone = document.getString("phone") ?: ""
+                val avatarUrl = document.getString("avatarUrl") ?: ""
                 val email = currentUser.email ?: ""
 
                 originalUsername = username
@@ -63,7 +69,8 @@ class SellerProfileViewModel : ViewModel() {
                     username = username,
                     email = email,
                     shopName = shopName,
-                    phone = phone
+                    phone = phone,
+                    avatarUrl = avatarUrl
                 )
             } catch (e: Exception) {
                 uiState.value = uiState.value.copy(
@@ -138,6 +145,51 @@ class SellerProfileViewModel : ViewModel() {
 
     fun clearUpdateMessage() {
         uiState.value = uiState.value.copy(updateMessage = null)
+    }
+
+    fun uploadAvatar(uri: Uri) {
+        val currentUser = auth.currentUser ?: return
+        viewModelScope.launch {
+            uiState.value = uiState.value.copy(isUploadingAvatar = true)
+            try {
+                val base64 = ImageUtils.uriToBase64(context, uri)
+                db.collection(AppConstant.COLLECTION_USERS)
+                    .document(currentUser.uid)
+                    .update("avatarUrl", base64)
+                    .await()
+                
+                uiState.value = uiState.value.copy(
+                    avatarUrl = base64,
+                    updateMessage = "✅ Đã cập nhật ảnh đại diện!"
+                )
+            } catch (e: Exception) {
+                uiState.value = uiState.value.copy(
+                    updateMessage = "❌ Lỗi: ${e.message}"
+                )
+            }
+            uiState.value = uiState.value.copy(isUploadingAvatar = false)
+        }
+    }
+
+    fun removeAvatar() {
+        val currentUser = auth.currentUser ?: return
+        viewModelScope.launch {
+            try {
+                db.collection(AppConstant.COLLECTION_USERS)
+                    .document(currentUser.uid)
+                    .update("avatarUrl", "")
+                    .await()
+                
+                uiState.value = uiState.value.copy(
+                    avatarUrl = "",
+                    updateMessage = "Đã xóa ảnh đại diện"
+                )
+            } catch (e: Exception) {
+                uiState.value = uiState.value.copy(
+                    updateMessage = "❌ Lỗi: ${e.message}"
+                )
+            }
+        }
     }
 
     fun logout() {

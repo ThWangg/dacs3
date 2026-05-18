@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import ltdd.dacsba.groceries.data.model.User
 import ltdd.dacsba.groceries.ui.components.ImagePickerButton
+import ltdd.dacsba.groceries.ui.components.SmartImage
 
 
 @Composable
@@ -202,12 +203,21 @@ fun UserAvatarCircle(user: User, size: Int = 46) {
         contentAlignment = Alignment.Center
     ) {
         if (user.avatarUrl.isNotBlank()) {
-            AsyncImage(
-                model = user.avatarUrl,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
+            if (user.avatarUrl.startsWith("data:image")) {
+                SmartImage(
+                    model = user.avatarUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                AsyncImage(
+                    model = user.avatarUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
         } else {
             Surface(shape = CircleShape, color = if (user.isDeactivated) Color.LightGray else roleColor, modifier = Modifier.fillMaxSize()) {
                 Box(contentAlignment = Alignment.Center) {

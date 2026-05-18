@@ -1,8 +1,7 @@
 package ltdd.dacsba.groceries.ui.components
 
-import android.Manifest
+import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -28,12 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import ltdd.dacsba.groceries.ui.components.SmartImage
 
 /**
  * Nút chọn ảnh từ thư viện (Gallery).
- * - Android 13+: tự xin quyền READ_MEDIA_IMAGES
- * - Android 12-: tự xin quyền READ_EXTERNAL_STORAGE
- * Khi người dùng chọn ảnh, trả về Uri qua [onImagePicked].
+ * Dùng GetContent() — launcher này tự cấp quyền đọc tạm thời cho URI được chọn,
+ * không cần xin READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE riêng.
+ * Gọi takePersistableUriPermission để giữ quyền đọc lâu dài, tránh lỗi
+ * "Object does not exist at location" khi đọc bytes upload lên Firebase Storage.
  */
 @Composable
 fun ImagePickerButton(
@@ -47,31 +48,27 @@ fun ImagePickerButton(
     accentColor: Color = Color(0xFF2E7D32),
     isCircle: Boolean = false
 ) {
-    // 1. Launcher mở Gallery
+    val context = LocalContext.current
+
+    // Launcher mở Gallery — GetContent() tự cấp quyền đọc tạm thời
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { onImagePicked(it) }
-    }
-
-    // 2. Launcher xin quyền — sau khi được cấp thì mở Gallery
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) galleryLauncher.launch("image/*")
-    }
-
-    // 3. Hàm trung gian: xin quyền phù hợp với phiên bản Android rồi mở Gallery
-    fun openGallery() {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_IMAGES       // Android 13+
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE  // Android ≤ 12
+        uri?.let {
+            // Cố lấy persistent read permission để URI không bị revoke khi đọc bytes sau này
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) { /* Một số URI không hỗ trợ persistent, bỏ qua */ }
+            onImagePicked(it)
         }
-        permissionLauncher.launch(permission)
     }
 
-    val context = LocalContext.current
+    // Mở Gallery trực tiếp — không cần xin quyền thủ công
+    fun openGallery() {
+        galleryLauncher.launch("image/*")
+    }
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (currentImageUrl.isNotBlank()) {
@@ -86,15 +83,23 @@ fun ImagePickerButton(
                             .clickable { openGallery() },
                         contentAlignment = Alignment.Center
                     ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(currentImageUrl)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                        val model = if (currentImageUrl.startsWith("data:image")) currentImageUrl 
+                            else ImageRequest.Builder(context).data(currentImageUrl).crossfade(true).build()
+                        if (currentImageUrl.startsWith("data:image")) {
+                            SmartImage(
+                                model = currentImageUrl,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            AsyncImage(
+                                model = model,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -108,7 +113,7 @@ fun ImagePickerButton(
                         }
                     }
                 } else {
-                    // Preview hình chữ nhật (dùng cho sản phẩm)
+
                     Card(shape = RoundedCornerShape(12.dp), elevation = CardDefaults.cardElevation(2.dp)) {
                         Box(
                             modifier = Modifier
@@ -117,15 +122,24 @@ fun ImagePickerButton(
                                 .clickable { openGallery() },
                             contentAlignment = Alignment.Center
                         ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(context)
-                                    .data(currentImageUrl)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
+                            if (currentImageUrl.startsWith("data:image")) {
+                                SmartImage(
+                                    model = currentImageUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(currentImageUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -146,7 +160,7 @@ fun ImagePickerButton(
                     }
                 }
 
-                // Nút xóa ảnh góc trên phải (chỉ dành cho hình chữ nhật)
+
                 if (!isCircle) {
                     IconButton(
                         onClick = onRemoveImage,
@@ -161,8 +175,7 @@ fun ImagePickerButton(
                 }
             }
 
-            // Nút xóa ảnh dạng text (chỉ dành cho hình tròn/avatar)
-            if (isCircle) {
+             if (isCircle) {
                 TextButton(
                     onClick = onRemoveImage,
                     colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
@@ -173,8 +186,7 @@ fun ImagePickerButton(
                 }
             }
         } else {
-            // ── Chưa có ảnh: Nút chọn ảnh ──
-            Box(
+             Box(
                 modifier = Modifier
                     .then(
                         if (isCircle) Modifier.size(previewHeight).clip(CircleShape)

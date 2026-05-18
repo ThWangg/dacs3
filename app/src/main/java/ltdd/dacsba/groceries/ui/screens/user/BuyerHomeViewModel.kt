@@ -14,13 +14,12 @@ import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.data.model.User
 import ltdd.dacsba.groceries.data.repository.ProductRepository
 import ltdd.dacsba.groceries.data.repository.SellerRequestRepository
-import ltdd.dacsba.groceries.data.repository.StorageRepository
+import ltdd.dacsba.groceries.data.repository.ImageUtils
 
 class BuyerHomeViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
     private val productRepository = ProductRepository()
     private val sellerReqRepo = SellerRequestRepository()
-    private val storageRepo = StorageRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
@@ -81,31 +80,23 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     /**
-     * Upload ảnh đại diện lên Firebase Storage rồi cập nhật avatarUrl trong Firestore.
-     * Hỗ trợ cả content:// URI (local) và https:// URL (Firebase).
+     * Nén ảnh → Base64 → lưu thẳng vào Firestore.
+     * Không cần Firebase Storage bucket.
      */
     fun uploadAndUpdateAvatar(uri: Uri) {
         viewModelScope.launch {
             val uid = auth.currentUser?.uid ?: return@launch
             isUploadingAvatar.value = true
             try {
-                // Đọc bytes từ URI — tránh lỗi "Object does not exist at location"
-                val bytes = context.contentResolver.openInputStream(uri)
-                    ?.readBytes()
-                    ?: throw Exception("Không đọc được file ảnh")
-                val fileName = "avatars/${uid}_${System.currentTimeMillis()}.jpg"
-                storageRepo.uploadImageBytes(bytes, fileName).onSuccess { downloadUrl ->
-                    db.collection(AppConstant.COLLECTION_USERS)
-                        .document(uid)
-                        .update("avatarUrl", downloadUrl)
-                        .await()
-                    currentUser.value = currentUser.value?.copy(avatarUrl = downloadUrl)
-                    profileMessage.value = "✅ Đã cập nhật ảnh đại diện!"
-                }.onFailure { e ->
-                    profileMessage.value = "❌ Upload thất bại: ${e.message}"
-                }
+                val base64 = ImageUtils.uriToBase64(context, uri)
+                db.collection(AppConstant.COLLECTION_USERS)
+                    .document(uid)
+                    .update("avatarUrl", base64)
+                    .await()
+                currentUser.value = currentUser.value?.copy(avatarUrl = base64)
+                profileMessage.value = "✅ Đã cập nhật ảnh đại diện!"
             } catch (e: Exception) {
-                profileMessage.value = "❌ Lỗi đọc ảnh: ${e.message}"
+                profileMessage.value = "❌ Lỗi: ${e.message}"
             }
             isUploadingAvatar.value = false
         }

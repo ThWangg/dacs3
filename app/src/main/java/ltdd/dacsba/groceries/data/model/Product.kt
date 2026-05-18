@@ -11,6 +11,7 @@ data class Product(
     val stock: Int = 0,
     val sellerId: String = "",
     val soldCount: Int = 0,
+    val status: String = "APPROVED", // "PENDING", "APPROVED", "REJECTED"
 
 
     //recommendation system

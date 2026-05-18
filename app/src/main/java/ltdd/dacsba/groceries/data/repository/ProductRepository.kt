@@ -18,7 +18,7 @@ class ProductRepository {
                 .get()
                 .await()
 
-            val products = snapshot.toObjects(Product::class.java)
+            val products = snapshot.toObjects(Product::class.java).filter { it.status == "APPROVED" }
             Result.success(products)
 
         } catch (e: Exception) {
@@ -33,7 +33,7 @@ class ProductRepository {
                 .get()
                 .await()
 
-            val products = snapshot.toObjects(Product::class.java)
+            val products = snapshot.toObjects(Product::class.java).filter { it.status == "APPROVED" }
             Result.success(products)
         }catch(e: Exception){
             Result.failure(e)
@@ -47,7 +47,7 @@ class ProductRepository {
 
             //filter
             val filteredProducts = allProducts.filter { product ->
-                product.name.contains(query, ignoreCase = true)
+                product.status == "APPROVED" && product.name.contains(query, ignoreCase = true)
             }
             Result.success(filteredProducts)
         } catch (e: Exception) {
@@ -57,7 +57,7 @@ class ProductRepository {
 
     suspend fun addProduct(product: Product): Result<Boolean> {
         return try {
-            productCollection.add(product).await()
+            productCollection.document(product.id).set(product).await()
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
@@ -69,10 +69,16 @@ class ProductRepository {
             if(productId.isEmpty()) {
                 return Result.failure(Exception("Invalid product ID"))
             }
-            productCollection
-                .document(productId)
-                .delete()
-                .await()
+            val docRef = productCollection.document(productId)
+            val doc = docRef.get().await()
+            if (doc.exists()) {
+                docRef.delete().await()
+            } else {
+                val snapshot = productCollection.whereEqualTo("id", productId).get().await()
+                for (d in snapshot.documents) {
+                    d.reference.delete().await()
+                }
+            }
             Result.success(true)
         } catch (e: Exception){
             Result.failure(e)
@@ -106,6 +112,41 @@ class ProductRepository {
             Result.success(products)
 
             } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getPendingProducts(): Result<List<Product>> {
+        return try {
+            val snapshot = productCollection
+                .whereEqualTo("status", "PENDING")
+                .get()
+                .await()
+            val products = snapshot.toObjects(Product::class.java)
+            Result.success(products)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateProductStatus(productId: String, status: String): Result<Boolean> {
+        return try {
+            val docRef = productCollection.document(productId)
+            val doc = docRef.get().await()
+            if (doc.exists()) {
+                docRef.update("status", status).await()
+            } else {
+                val snapshot = productCollection.whereEqualTo("id", productId).get().await()
+                if (!snapshot.isEmpty) {
+                    for (d in snapshot.documents) {
+                        d.reference.update("status", status).await()
+                    }
+                } else {
+                    return Result.failure(Exception("Không tìm thấy sản phẩm trong Database"))
+                }
+            }
+            Result.success(true)
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }

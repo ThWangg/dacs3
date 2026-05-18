@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -59,7 +60,8 @@ fun SellerDashboardScreen(
         totalSold = totalSold,
         avgRating = avgRating,
         isLoading = isLoading,
-        onRefresh = { viewModel.refreshData() }
+        onRefresh = { viewModel.refreshData() },
+        onNotificationClick = { navController.navigate(SellerRoutes.NOTIFICATIONS) }
     )
 }
 
@@ -69,7 +71,8 @@ fun SellerDashboardContent(
     totalSold: Int,
     avgRating: Double,
     isLoading: Boolean,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onNotificationClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -97,11 +100,19 @@ fun SellerDashboardContent(
                     color = Color.Gray
                 )
             }
-            IconButton(onClick = onRefresh) {
-                Icon(
-                    Icons.Default.Refresh,
-                    contentDescription = null,
-                    tint = Color.Gray)
+            Row {
+                IconButton(onClick = onNotificationClick) {
+                    Icon(
+                        Icons.Default.Notifications,
+                        contentDescription = null,
+                        tint = Color.Gray)
+                }
+                IconButton(onClick = onRefresh) {
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = null,
+                        tint = Color.Gray)
+                }
             }
         }
 
@@ -253,6 +264,7 @@ fun SellerDashboardPreview() {
         totalSold = 450,
         avgRating = 4.7,
         isLoading = false,
-        onRefresh = {}
+        onRefresh = {},
+        onNotificationClick = {}
     )
 }

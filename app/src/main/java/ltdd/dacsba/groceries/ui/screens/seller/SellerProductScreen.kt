@@ -10,9 +10,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import ltdd.dacsba.groceries.data.model.Product
+import ltdd.dacsba.groceries.ui.components.SmartImage
 
 @Composable
 fun SellerProductScreen(
@@ -58,6 +59,18 @@ fun SellerProductContent(
     onEditClick: (Product) -> Unit,
     onDeleteClick: (String) -> Unit
 ) {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Đã duyệt", "Chờ duyệt", "Bị từ chối")
+    
+    val filteredProducts = products.filter {
+        when (selectedTab) {
+            0 -> it.status == "APPROVED"
+            1 -> it.status == "PENDING"
+            2 -> it.status == "REJECTED"
+            else -> false
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,13 +79,13 @@ fun SellerProductContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "My Products",
-                fontSize = 24.sp,
+                text = "Quản lý Sản phẩm",
+                fontSize = 22.sp,
                 fontWeight = FontWeight.ExtraBold
             )
 
@@ -95,6 +108,32 @@ fun SellerProductContent(
             }
         }
 
+        TabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = Color.White,
+            contentColor = Color(0xFF7CB342),
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                    color = Color(0xFF7CB342)
+                )
+            }
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = {
+                        Text(
+                            title,
+                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                            color = if (selectedTab == index) Color(0xFF7CB342) else Color.Gray
+                        )
+                    }
+                )
+            }
+        }
+
         if (isLoading) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
@@ -102,12 +141,12 @@ fun SellerProductContent(
             )
         }
 
-        if (products.isEmpty() && !isLoading) {
+        if (filteredProducts.isEmpty() && !isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No products found", color = Color.Gray)
+                Text("Không có sản phẩm nào", color = Color.Gray)
             }
         }
 
@@ -116,7 +155,7 @@ fun SellerProductContent(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(products) { product ->
+            items(filteredProducts) { product ->
                 ProductItemRow(
                     product = product,
                     onEdit = { onEditClick(product) },
@@ -152,11 +191,14 @@ fun ProductItemRow(
                     .background(Color(0xFFF0F0F0)),
                 contentAlignment = Alignment.Center
             ) {
-
-                Icon(Icons.Default.ShoppingCart,
-                    contentDescription = null,
-                    tint = Color.LightGray
-                )
+                if (product.imageUrl.isNotBlank()) {
+                    SmartImage(model = product.imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                } else {
+                    Icon(Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        tint = Color.LightGray
+                    )
+                }
             }
 
             Column(
@@ -167,19 +209,34 @@ fun ProductItemRow(
                 Text(
                     text = product.name,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     maxLines = 1
                 )
                 Text(
                     text = "${product.price}đ / ${product.unit}",
                     color = Color(0xFF7CB342),
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp
                 )
-                Text(
-                    text = "Stock: ${product.stock} | Sold: ${product.soldCount}",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                Spacer(Modifier.height(2.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFE8F5E9)) {
+                        Text("Kho: ${product.stock}", fontSize = 10.sp, color = Color(0xFF7CB342), modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                    }
+                    val statusColor = when(product.status) {
+                        "APPROVED" -> Color(0xFF1565C0)
+                        "PENDING" -> Color(0xFFE65100)
+                        else -> Color(0xFFD32F2F)
+                    }
+                    val statusBg = when(product.status) {
+                        "APPROVED" -> Color(0xFFE3F2FD)
+                        "PENDING" -> Color(0xFFFFF3E0)
+                        else -> Color(0xFFFFEBEE)
+                    }
+                    Surface(shape = RoundedCornerShape(4.dp), color = statusBg) {
+                        Text(product.status, fontSize = 10.sp, color = statusColor, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                    }
+                }
             }
 
             Row {

@@ -1,45 +1,29 @@
 package ltdd.dacsba.groceries.ui.screens.seller
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,9 +31,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import ltdd.dacsba.groceries.ui.components.AppTextField
+import ltdd.dacsba.groceries.ui.components.SmartImage
 
+val SellerGreen = Color(0xFF7CB342)
+val SellerGreenLight = Color(0xFFAED581)
+val SellerBg = Color(0xFFFBFBFB)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SellerProfileScreen(
     navController: NavController,
@@ -60,33 +51,105 @@ fun SellerProfileScreen(
     val isLoading by viewModel.isLoading
     val isEditMode by viewModel.isEditMode
 
-    androidx.compose.runtime.LaunchedEffect(uiState.updateMessage) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showProfileSheet by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    var localAvatarUri by remember { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(uiState.updateMessage) {
         uiState.updateMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            snackbarHostState.showSnackbar(it)
             viewModel.clearUpdateMessage()
         }
     }
 
-    SellerProfileContent(
-        username = uiState.username,
-        email = uiState.email,
-        shopName = uiState.shopName,
-        phone = uiState.phone,
-        isLoading = isLoading,
-        isEditMode = isEditMode,
-        onUsernameChange = { viewModel.onUsernameChange(it) },
-        onShopNameChange = { viewModel.onShopNameChange(it) },
-        onPhoneChange = { viewModel.onPhoneChange(it) },
-        onEditClick = { viewModel.enterEditMode() },
-        onSaveClick = { viewModel.saveProfile() },
-        onCancelEdit = { viewModel.cancelEdit() },
-        onLogoutClick = {
-            viewModel.logout()
-            navController.navigate(ltdd.dacsba.groceries.data.constant.AppConstant.Routes.LOGIN) {
-                popUpTo(0) { inclusive = true }
-            }
+    // Gallery launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            localAvatarUri = it
+            viewModel.uploadAvatar(it)
         }
-    )
+    }
+
+    fun openGallery() {
+        galleryLauncher.launch("image/*")
+    }
+
+    if (showProfileSheet) {
+        SellerProfileBottomSheet(
+            username = uiState.username,
+            email = uiState.email,
+            shopName = uiState.shopName,
+            phone = uiState.phone,
+            avatarUrl = uiState.avatarUrl,
+            localAvatarUri = localAvatarUri,
+            isEditMode = isEditMode,
+            isLoading = isLoading,
+            isUploading = uiState.isUploadingAvatar,
+            onUsernameChange = { viewModel.onUsernameChange(it) },
+            onShopNameChange = { viewModel.onShopNameChange(it) },
+            onPhoneChange = { viewModel.onPhoneChange(it) },
+            onEnterEdit = { viewModel.enterEditMode() },
+            onSave = { viewModel.saveProfile() },
+            onCancelEdit = { viewModel.cancelEdit() },
+            onPickAvatar = { openGallery() },
+            onRemoveAvatar = {
+                localAvatarUri = null
+                viewModel.removeAvatar()
+            },
+            onLogout = { showProfileSheet = false; showLogoutDialog = true },
+            onDismiss = { viewModel.cancelEdit(); showProfileSheet = false; localAvatarUri = null }
+        )
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(20.dp),
+            icon = { Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red, modifier = Modifier.size(32.dp)) },
+            title = { Text("Đăng xuất?", fontWeight = FontWeight.Bold) },
+            text = { Text("Bạn có chắc muốn đăng xuất khỏi tài khoản Seller không?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        viewModel.logout()
+                        navController.navigate(ltdd.dacsba.groceries.data.constant.AppConstant.Routes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    shape = RoundedCornerShape(10.dp)
+                ) { Text("Đăng xuất", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) { Text("Huỷ") }
+            }
+        )
+    }
+
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+        SellerProfileContent(
+            username = uiState.username,
+            email = uiState.email,
+            shopName = uiState.shopName,
+            phone = uiState.phone,
+            avatarUrl = uiState.avatarUrl,
+            localAvatarUri = localAvatarUri,
+            isUploading = uiState.isUploadingAvatar,
+            onAvatarClick = { showProfileSheet = true },
+            onLogoutClick = { showLogoutDialog = true },
+            modifier = Modifier.padding(padding)
+        )
+    }
 }
 
 @Composable
@@ -95,246 +158,344 @@ fun SellerProfileContent(
     email: String,
     shopName: String,
     phone: String,
-    isLoading: Boolean,
-    isEditMode: Boolean,
-    onUsernameChange: (String) -> Unit,
-    onShopNameChange: (String) -> Unit,
-    onPhoneChange: (String) -> Unit,
-    onEditClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    onCancelEdit: () -> Unit,
-    onLogoutClick: () -> Unit
+    avatarUrl: String = "",
+    localAvatarUri: Uri? = null,
+    isUploading: Boolean = false,
+    onAvatarClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var showLogoutDialog by remember { mutableStateOf(false) }
-
-    if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Logout") },
-            text = { Text("Confirm ?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLogoutDialog = false
-                        onLogoutClick()
-                    }
-                ) {
-                    Text("Logout", color = Color.Red)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
+    val context = LocalContext.current
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFBFBFB))
+            .background(SellerBg)
             .verticalScroll(rememberScrollState())
     ) {
-
-        //header + avatar
+        // Header gradient
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF7CB342))
-                .padding(24.dp),
+                .background(Brush.verticalGradient(listOf(SellerGreen, SellerGreenLight)))
+                .padding(top = 32.dp, bottom = 40.dp),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                //avartar
-                Surface(
-                    modifier = Modifier.size(90.dp),
-                    shape = CircleShape,
-                    color = Color.White
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Avatar bấm được
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .clickable { onAvatarClick() },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Color(0xFF7CB342),
-                            modifier = Modifier.size(52.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = username.ifBlank { "Seller" },
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Text(
-                    text = email,
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-            }
-        }
-
-        if (!isEditMode) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = onEditClick) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit",
-                        tint = Color(0xFF7CB342)
-                    )
-                }
-            }
-        }
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "Info",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-
-                if (isEditMode) {
-                    AppTextField(
-                        value = username,
-                        onValueChange = onUsernameChange,
-                        label = "Username",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    AppTextField(
-                        value = shopName,
-                        onValueChange = onShopNameChange,
-                        label = "Shop name",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    AppTextField(
-                        value = phone,
-                        onValueChange = onPhoneChange,
-                        label = "Phone",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                } else {
-
-                    ProfileInfoRow(
-                        label = "Username",
-                        value = username.ifBlank { "--" }
-                    )
-                    ProfileInfoRow(
-                        label = "Shop name",
-                        value = shopName.ifBlank { "--" }
-                    )
-                    ProfileInfoRow(
-                        label = "Phone",
-                        value = phone.ifBlank { "--" }
-                    )
-                    ProfileInfoRow(
-                        label = "Email",
-                        value = email.ifBlank { "--" }
-                    )
-                }
-            }
-        }
-
-        //nút lưu/huỷ
-        if (isEditMode) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onSaveClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF7CB342)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color.White
-                        )
+                    val avatarData = localAvatarUri ?: avatarUrl.takeIf { it.isNotBlank() }
+                    if (avatarData != null) {
+                        val model = if (avatarData is Uri) avatarData.toString()
+                        else avatarData as String
+                        if (model.startsWith("data:image")) {
+                            SmartImage(
+                                model = model,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context).data(avatarData).crossfade(true).build(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     } else {
-                        Text("Save changes")
+                        Text(
+                            text = (username.firstOrNull() ?: 'S').uppercaseChar().toString(),
+                            fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = SellerGreen
+                        )
+                    }
+                    // Loading overlay
+                    if (isUploading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.45f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp), strokeWidth = 2.dp)
+                        }
                     }
                 }
 
-                OutlinedButton(
-                    onClick = onCancelEdit,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
+                // Camera icon badge
+                Box(
+                    modifier = Modifier
+                        .offset(x = 30.dp, y = (-20).dp)
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Cancel")
+                    Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = SellerGreen, modifier = Modifier.size(16.dp))
+                }
+
+                Text(username.ifBlank { "Seller" }, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.offset(y = (-12).dp))
+                Text(email, fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f), modifier = Modifier.offset(y = (-12).dp))
+                Spacer(Modifier.height(4.dp))
+                Surface(shape = RoundedCornerShape(20.dp), color = Color.White.copy(alpha = 0.2f)) {
+                    Text("SELLER", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp))
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height((-16).dp))
 
-        //logout buton
-        OutlinedButton(
-            onClick = { showLogoutDialog = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+        // Info card
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(4.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.ExitToApp,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.size(8.dp))
-            Text("Logout")
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Thông tin tài khoản", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                ProfileDetailRow(Icons.Default.Store, "Tên Shop", shopName.ifBlank { "Chưa thiết lập" })
+                HorizontalDivider(color = Color(0xFFF0F0F0))
+                ProfileDetailRow(Icons.Default.Person, "Chủ cửa hàng", username.ifBlank { "Chưa đặt tên" })
+                HorizontalDivider(color = Color(0xFFF0F0F0))
+                ProfileDetailRow(Icons.Default.Phone, "Số điện thoại", phone.ifBlank { "Chưa thiết lập" })
+                HorizontalDivider(color = Color(0xFFF0F0F0))
+                ProfileDetailRow(Icons.Default.Email, "Email", email)
+            }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
+
+        // Settings card
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            Column(modifier = Modifier.padding(8.dp)) {
+                SettingsRow(icon = Icons.Default.Edit, label = "Chỉnh sửa Profile", iconColor = SellerGreen, onClick = onAvatarClick)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F0F0))
+                SettingsRow(icon = Icons.Default.Info, label = "Về ứng dụng", iconColor = Color(0xFF1565C0), onClick = {})
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Logout button
+        OutlinedButton(
+            onClick = onLogoutClick,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+            border = BorderStroke(1.dp, Color.Red.copy(alpha = 0.5f))
+        ) {
+            Icon(Icons.Default.ExitToApp, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Đăng xuất", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+        }
+
+        Spacer(Modifier.height(32.dp))
     }
 }
 
 @Composable
-fun ProfileInfoRow(
-    label: String,
-    value: String
+fun ProfileDetailRow(icon: ImageVector, label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = SellerGreen, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(label, fontSize = 12.sp, color = Color.Gray)
+            Text(value, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        }
+    }
+}
+
+@Composable
+fun SettingsRow(icon: ImageVector, label: String, iconColor: Color, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(shape = CircleShape, color = iconColor.copy(alpha = 0.1f), modifier = Modifier.size(36.dp)) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(18.dp))
+            }
+        }
+        Spacer(Modifier.width(14.dp))
+        Text(label, modifier = Modifier.weight(1f), fontSize = 15.sp)
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SellerProfileBottomSheet(
+    username: String,
+    email: String,
+    shopName: String,
+    phone: String,
+    avatarUrl: String,
+    localAvatarUri: Uri?,
+    isEditMode: Boolean,
+    isLoading: Boolean,
+    isUploading: Boolean,
+    onUsernameChange: (String) -> Unit,
+    onShopNameChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit,
+    onEnterEdit: () -> Unit,
+    onSave: () -> Unit,
+    onCancelEdit: () -> Unit,
+    onPickAvatar: () -> Unit,
+    onRemoveAvatar: () -> Unit,
+    onLogout: () -> Unit,
+    onDismiss: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = value,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.DarkGray
-        )
+    val context = LocalContext.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Handle bar
+            Box(modifier = Modifier.width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFE0E0E0)))
+
+            Text("👤 Hồ sơ Seller", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+
+            // Avatar lớn — bấm để đổi
+            Box(contentAlignment = Alignment.BottomEnd) {
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(SellerGreen)
+                        .clickable { onPickAvatar() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    val avatarData = localAvatarUri ?: avatarUrl.takeIf { it.isNotBlank() }
+                    if (avatarData != null) {
+                        val model = if (avatarData is Uri) avatarData.toString()
+                        else avatarData as String
+                        if (model.startsWith("data:image")) {
+                            SmartImage(
+                                model = model,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context).data(avatarData).crossfade(true).build(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    } else {
+                        Text(
+                            (username.firstOrNull() ?: 'S').uppercaseChar().toString(),
+                            fontSize = 38.sp, fontWeight = FontWeight.ExtraBold, color = Color.White
+                        )
+                    }
+                    if (isUploading) {
+                        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.45f)), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp), strokeWidth = 2.dp)
+                        }
+                    }
+                }
+                // Camera badge
+                Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = SellerGreenLight, shadowElevation = 4.dp) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+
+            Text("Bấm vào ảnh để thay đổi", fontSize = 12.sp, color = Color.Gray)
+
+            if (!isEditMode) {
+                Text(username, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                Text(email, color = Color.Gray, fontSize = 13.sp)
+
+                // 1. Đổi ảnh
+                Button(
+                    onClick = onPickAvatar,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SellerGreen),
+                    enabled = !isUploading
+                ) {
+                    Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (avatarUrl.isNotBlank() || localAvatarUri != null) "Đổi ảnh đại diện" else "Thêm ảnh đại diện",
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                // 2. Chỉnh sửa thông tin
+                Button(
+                    onClick = onEnterEdit,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0))
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Chỉnh sửa thông tin", fontWeight = FontWeight.SemiBold)
+                }
+
+                // 3. Xóa ảnh (chỉ hiện nếu có avatar)
+                if (avatarUrl.isNotBlank() || localAvatarUri != null) {
+                    OutlinedButton(
+                        onClick = onRemoveAvatar,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
+                        border = BorderStroke(1.dp, Color(0xFFD32F2F).copy(0.4f))
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Xóa ảnh đại diện")
+                    }
+                }
+
+            } else {
+                // Edit mode
+                Text("Chỉnh sửa Profile", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                AppTextField(value = username, onValueChange = onUsernameChange, label = "Tên hiển thị", modifier = Modifier.fillMaxWidth())
+                AppTextField(value = shopName, onValueChange = onShopNameChange, label = "Tên Shop", modifier = Modifier.fillMaxWidth())
+                AppTextField(value = phone, onValueChange = onPhoneChange, label = "Số điện thoại", modifier = Modifier.fillMaxWidth())
+                
+                Button(
+                    onClick = onSave,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SellerGreen)
+                ) {
+                    if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                    else Text("Lưu thay đổi", fontWeight = FontWeight.SemiBold)
+                }
+                TextButton(onClick = onCancelEdit, modifier = Modifier.fillMaxWidth()) { Text("Huỷ", color = Color.Gray) }
+            }
+        }
     }
 }
 
@@ -342,18 +503,11 @@ fun ProfileInfoRow(
 @Composable
 fun SellerProfilePreview() {
     SellerProfileContent(
-        username = "Nguyễn Văn A",
-        email = "seller@gmail.com",
-        shopName = "Shop Rau Sạch Xanh",
-        phone = "0901234567",
-        isLoading = false,
-        isEditMode = false,
-        onUsernameChange = {},
-        onShopNameChange = {},
-        onPhoneChange = {},
-        onEditClick = {},
-        onSaveClick = {},
-        onCancelEdit = {},
+        username = "Seller TAUT",
+        email = "seller@tautshop.com",
+        shopName = "Taub Shop",
+        phone = "0987654321",
+        onAvatarClick = {},
         onLogoutClick = {}
     )
 }

@@ -1,8 +1,7 @@
 package ltdd.dacsba.groceries.ui.screens.admin
 
-import android.Manifest
+import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -34,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import ltdd.dacsba.groceries.ui.components.AppTextField
+import ltdd.dacsba.groceries.ui.components.SmartImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,27 +61,24 @@ fun AdminProfileScreen(
         snack?.let { snackbarHostState.showSnackbar(it); viewModel.clearSnack() }
     }
 
-    // Gallery launcher
+    // Gallery launcher — GetContent() tự cấp quyền tạm thời, không cần xin quyền thủ công
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
+            // Lấy persistent read permission để URI không bị revoke khi đọc bytes
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) { /* Một số URI không hỗ trợ persistent, bỏ qua */ }
             localAvatarUri = it
             viewModel.uploadAdminAvatar(it)
         }
     }
 
-    // Permission launcher
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted -> if (granted) galleryLauncher.launch("image/*") }
-
     fun openGallery() {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            Manifest.permission.READ_MEDIA_IMAGES
-        else
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        permissionLauncher.launch(permission)
+        galleryLauncher.launch("image/*")
     }
 
     // Profile bottom sheet
@@ -183,12 +180,23 @@ fun AdminProfileContent(
                 ) {
                     val avatarData = localAvatarUri ?: adminAvatarUrl.takeIf { it.isNotBlank() }
                     if (avatarData != null) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context).data(avatarData).crossfade(true).build(),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                        val model = if (avatarData is Uri) avatarData.toString()
+                        else avatarData as String
+                        if (model.startsWith("data:image")) {
+                            SmartImage(
+                                model = model,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context).data(avatarData).crossfade(true).build(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     } else {
                         Text(
                             text = (adminUsername.firstOrNull() ?: 'A').uppercaseChar().toString(),
@@ -367,12 +375,23 @@ fun AdminProfileBottomSheet(
                 ) {
                     val avatarData = localAvatarUri ?: avatarUrl.takeIf { it.isNotBlank() }
                     if (avatarData != null) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context).data(avatarData).crossfade(true).build(),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                        val model = if (avatarData is Uri) avatarData.toString()
+                        else avatarData as String
+                        if (model.startsWith("data:image")) {
+                            SmartImage(
+                                model = model,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context).data(avatarData).crossfade(true).build(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     } else {
                         Text(
                             (username.firstOrNull() ?: 'A').uppercaseChar().toString(),

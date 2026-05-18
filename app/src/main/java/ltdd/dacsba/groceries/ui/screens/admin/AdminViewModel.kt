@@ -14,17 +14,20 @@ import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.data.model.SellerRequest
 import ltdd.dacsba.groceries.data.model.User
 import ltdd.dacsba.groceries.data.repository.AdminRepository
+import ltdd.dacsba.groceries.data.repository.ProductRepository
 import ltdd.dacsba.groceries.data.repository.StorageRepository
 
 class AdminViewModel(application: Application) : AndroidViewModel(application) {
     private val context: Context = application.applicationContext
     private val repo = AdminRepository()
+    private val productRepo = ProductRepository()
     private val storageRepo = StorageRepository()
 
     val isLoading = mutableStateOf(false)
     val isUploading = mutableStateOf(false)
     val users = mutableStateOf<List<User>>(emptyList())
     val products = mutableStateOf<List<Product>>(emptyList())
+    val pendingProducts = mutableStateOf<List<Product>>(emptyList())
     val pendingRequests = mutableStateOf<List<SellerRequest>>(emptyList())
     val snackMessage = mutableStateOf<String?>(null)
 
@@ -68,36 +71,26 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ─── Image Upload ─────────────────────────────────────────────────────────
+    // ─── Image Upload (Base64 → Firestore, không cần Firebase Storage) ──────────
 
     /**
-     * Upload ảnh từ Gallery lên Firebase Storage.
-     * @param uri Uri của ảnh được chọn từ Gallery
-     * @param folder Thư mục lưu trong Storage ("products" hoặc "avatars")
-     * @param onComplete Callback trả về download URL sau khi upload xong
+     * Nén ảnh → Base64 → trả về qua callback.
+     * Lưu trực tiếp vào Firestore, không cần Firebase Storage bucket.
      */
     fun uploadImage(uri: Uri, folder: String, onComplete: (String) -> Unit) {
         viewModelScope.launch {
             isUploading.value = true
-            val fileName = "${folder}/${System.currentTimeMillis()}.jpg"
             try {
-                // Đọc bytes trước — đáng tin cậy hơn putFile() với content:// URI
-                val bytes = context.contentResolver.openInputStream(uri)
-                    ?.readBytes()
-                    ?: throw Exception("Không đọc được file ảnh")
-                storageRepo.uploadImageBytes(bytes, fileName).onSuccess { url ->
-                    onComplete(url)
-                }.onFailure {
-                    snackMessage.value = "Upload ảnh thất bại: ${it.message}"
-                }
+                val base64 = ltdd.dacsba.groceries.data.repository.ImageUtils.uriToBase64(context, uri)
+                onComplete(base64)
             } catch (e: Exception) {
-                snackMessage.value = "Lỗi: ${e.message}"
+                snackMessage.value = "Lỗi xử lý ảnh: ${e.message}"
             }
             isUploading.value = false
         }
     }
 
-    /** Upload avatar cho chính admin đang đăng nhập — dùng putBytes để tránh lỗi content:// */
+    /** Upload avatar admin — nén ảnh → Base64 → lưu thẳng vào Firestore */
     fun uploadAdminAvatar(uri: Uri) {
         viewModelScope.launch {
             isUploading.value = true
@@ -108,18 +101,13 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
             try {
-                val bytes = context.contentResolver.openInputStream(uri)
-                    ?.readBytes()
-                    ?: throw Exception("Không đọc được file ảnh")
-                val fileName = "avatars/${uid}_${System.currentTimeMillis()}.jpg"
-                storageRepo.uploadImageBytes(bytes, fileName).onSuccess { downloadUrl ->
-                    repo.updateUserAvatar(uid, downloadUrl).onSuccess {
-                        adminAvatarUrl.value = downloadUrl
-                        snackMessage.value = "✅ Đã cập nhật ảnh đại diện!"
-                    }.onFailure { snackMessage.value = "Lưu thất bại: ${it.message}" }
-                }.onFailure { snackMessage.value = "Upload thất bại: ${it.message}" }
+                val base64 = ltdd.dacsba.groceries.data.repository.ImageUtils.uriToBase64(context, uri)
+                repo.updateUserAvatar(uid, base64).onSuccess {
+                    adminAvatarUrl.value = base64
+                    snackMessage.value = "✅ Đã cập nhật ảnh đại diện!"
+                }.onFailure { snackMessage.value = "Lưu thất bại: ${it.message}" }
             } catch (e: Exception) {
-                snackMessage.value = "Lỗi đọc ảnh: ${e.message}"
+                snackMessage.value = "Lỗi xử lý ảnh: ${e.message}"
             }
             isUploading.value = false
         }
@@ -167,9 +155,16 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     fun loadPendingRequests() {
         viewModelScope.launch {
             isLoading.value = true
-            repo.getPendingRequests().onSuccess {
-                pendingRequests.value = it
-            }.onFailure { snackMessage.value = "Lỗi: ${it.message}" }
+            launch { 
+                repo.getPendingRequests().onSuccess {
+                    pendingRequests.value = it
+                }.onFailure { snackMessage.value = "Lỗi load Seller Request: ${it.message}" }
+            }
+            launch {
+                productRepo.getPendingProducts().onSuccess {
+                    pendingProducts.value = it
+                }.onFailure { snackMessage.value = "Lỗi load Pending Products: ${it.message}" }
+            }
             isLoading.value = false
         }
     }
@@ -194,6 +189,29 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
                 pendingRequests.value = pendingRequests.value.filter { it.requestId != requestId }
                 snackMessage.value = "Yêu cầu của $name đã bị từ chối."
             }.onFailure { snackMessage.value = "Lỗi: ${it.message}" }
+        }
+    }
+
+    fun approveProduct(product: Product) {
+        viewModelScope.launch {
+            isLoading.value = true
+            productRepo.updateProductStatus(product.id, "APPROVED").onSuccess {
+                pendingProducts.value = pendingProducts.value.filter { it.id != product.id }
+                snackMessage.value = "✅ Đã duyệt sản phẩm: ${product.name}"
+                repo.getAllProducts().onSuccess { products.value = it }
+            }.onFailure { snackMessage.value = "Lỗi duyệt SP: ${it.message}" }
+            isLoading.value = false
+        }
+    }
+
+    fun rejectProduct(product: Product) {
+        viewModelScope.launch {
+            isLoading.value = true
+            productRepo.updateProductStatus(product.id, "REJECTED").onSuccess {
+                pendingProducts.value = pendingProducts.value.filter { it.id != product.id }
+                snackMessage.value = "❌ Đã từ chối sản phẩm: ${product.name}"
+            }.onFailure { snackMessage.value = "Lỗi từ chối SP: ${it.message}" }
+            isLoading.value = false
         }
     }
 

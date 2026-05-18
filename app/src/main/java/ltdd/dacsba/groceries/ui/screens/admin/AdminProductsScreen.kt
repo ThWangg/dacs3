@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 import ltdd.dacsba.groceries.data.model.Category
 import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.ui.components.ImagePickerButton
+import ltdd.dacsba.groceries.ui.components.SmartImage
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -239,7 +240,7 @@ fun AdminProductCard(
                 contentAlignment = Alignment.Center
             ) {
                 if (product.imageUrl.isNotBlank()) {
-                    AsyncImage(model = product.imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    SmartImage(model = product.imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 } else {
                     Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(30.dp))
                 }

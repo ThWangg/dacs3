@@ -47,14 +47,5 @@ fun AppNavigation(navController: NavHostController) {
         composable(AppConstant.Routes.SELLER_HOME) {
             MainSellerScreen()
         }
-
-        // Seller sub-screens (navigate từ SellerProductScreen)
-        composable(AppConstant.Routes.SELLER_ADD_PRODUCT) {
-            SellerAddProductScreen(navController = navController)
-        }
-        composable("${AppConstant.Routes.SELLER_EDIT_PRODUCT}/{productId}") { backStackEntry ->
-            val productId = backStackEntry.arguments?.getString("productId")
-            SellerEditProductScreen(navController = navController, productId = productId)
-        }
     }
 }
