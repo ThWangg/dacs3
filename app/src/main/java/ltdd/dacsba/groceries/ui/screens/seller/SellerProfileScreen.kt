@@ -44,7 +44,9 @@ val SellerBg = Color(0xFFFBFBFB)
 @Composable
 fun SellerProfileScreen(
     navController: NavController,
-    viewModel: SellerProfileViewModel = viewModel()
+    viewModel: SellerProfileViewModel = viewModel(),
+    onLogout: () -> Unit = {},
+    onSwitchToBuyer: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState
@@ -74,7 +76,6 @@ fun SellerProfileScreen(
                 )
             } catch (_: Exception) {}
             localAvatarUri = it
-            viewModel.uploadAvatar(it)
         }
     }
 
@@ -100,6 +101,10 @@ fun SellerProfileScreen(
             onSave = { viewModel.saveProfile() },
             onCancelEdit = { viewModel.cancelEdit() },
             onPickAvatar = { openGallery() },
+            onConfirmAvatar = { uri -> 
+                viewModel.uploadAvatar(uri)
+                localAvatarUri = null
+            },
             onRemoveAvatar = {
                 localAvatarUri = null
                 viewModel.removeAvatar()
@@ -122,9 +127,7 @@ fun SellerProfileScreen(
                     onClick = {
                         showLogoutDialog = false
                         viewModel.logout()
-                        navController.navigate(ltdd.dacsba.groceries.data.constant.AppConstant.Routes.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                        onLogout()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                     shape = RoundedCornerShape(10.dp)
@@ -147,6 +150,7 @@ fun SellerProfileScreen(
             isUploading = uiState.isUploadingAvatar,
             onAvatarClick = { showProfileSheet = true },
             onLogoutClick = { showLogoutDialog = true },
+            onSwitchToBuyer = onSwitchToBuyer,
             modifier = Modifier.padding(padding)
         )
     }
@@ -163,6 +167,7 @@ fun SellerProfileContent(
     isUploading: Boolean = false,
     onAvatarClick: () -> Unit,
     onLogoutClick: () -> Unit,
+    onSwitchToBuyer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -285,7 +290,21 @@ fun SellerProfileContent(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedButton(
+            onClick = onSwitchToBuyer,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFF57C00)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF57C00))
+        ) {
+            Icon(Icons.Default.SwapHoriz, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Chuyển sang Giao diện Mua Hàng", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Logout button
         OutlinedButton(
@@ -352,6 +371,7 @@ fun SellerProfileBottomSheet(
     onSave: () -> Unit,
     onCancelEdit: () -> Unit,
     onPickAvatar: () -> Unit,
+    onConfirmAvatar: (Uri) -> Unit,
     onRemoveAvatar: () -> Unit,
     onLogout: () -> Unit,
     onDismiss: () -> Unit
@@ -434,19 +454,37 @@ fun SellerProfileBottomSheet(
                 Text(email, color = Color.Gray, fontSize = 13.sp)
 
                 // 1. Đổi ảnh
-                Button(
-                    onClick = onPickAvatar,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = SellerGreen),
-                    enabled = !isUploading
-                ) {
-                    Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        if (avatarUrl.isNotBlank() || localAvatarUri != null) "Đổi ảnh đại diện" else "Thêm ảnh đại diện",
-                        fontWeight = FontWeight.SemiBold
-                    )
+                if (localAvatarUri != null) {
+                    Button(
+                        onClick = { onConfirmAvatar(localAvatarUri) },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                        enabled = !isUploading
+                    ) {
+                        if (isUploading) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                        } else {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Xác nhận đổi ảnh", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onPickAvatar,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = SellerGreen),
+                        enabled = !isUploading
+                    ) {
+                        Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            if (avatarUrl.isNotBlank()) "Đổi ảnh đại diện" else "Thêm ảnh đại diện",
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
 
                 // 2. Chỉnh sửa thông tin
@@ -508,6 +546,7 @@ fun SellerProfilePreview() {
         shopName = "Taub Shop",
         phone = "0987654321",
         onAvatarClick = {},
-        onLogoutClick = {}
+        onLogoutClick = {},
+        onSwitchToBuyer = {}
     )
 }

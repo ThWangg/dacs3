@@ -32,7 +32,10 @@ object SellerRoutes {
 }
 
 @Composable
-fun MainSellerScreen() {
+fun MainSellerScreen(
+    onLogout: () -> Unit,
+    onSwitchToBuyer: () -> Unit
+) {
     val navController = rememberNavController()
     val sellerViewModel: SellerViewModel = viewModel()
 
@@ -76,7 +79,11 @@ fun MainSellerScreen() {
                 )
             }
             composable(SellerRoutes.PROFILE) {
-                SellerProfileScreen(navController = navController)
+                SellerProfileScreen(
+                    navController = navController,
+                    onLogout = onLogout,
+                    onSwitchToBuyer = onSwitchToBuyer
+                )
             }
             composable(AppConstant.Routes.SELLER_ADD_PRODUCT) {
                 SellerAddProductScreen(navController = navController, viewModel = sellerViewModel)
@@ -95,5 +102,5 @@ fun MainSellerScreen() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MainSellerScreenPreview() {
-    MainSellerScreen()
+    MainSellerScreen(onLogout = {}, onSwitchToBuyer = {})
 }

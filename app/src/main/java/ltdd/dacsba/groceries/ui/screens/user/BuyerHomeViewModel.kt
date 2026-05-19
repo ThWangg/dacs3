@@ -15,11 +15,14 @@ import ltdd.dacsba.groceries.data.model.User
 import ltdd.dacsba.groceries.data.repository.ProductRepository
 import ltdd.dacsba.groceries.data.repository.SellerRequestRepository
 import ltdd.dacsba.groceries.data.repository.ImageUtils
+import ltdd.dacsba.groceries.data.model.CartItem
+import ltdd.dacsba.groceries.data.repository.CartRepository
 
 class BuyerHomeViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
     private val productRepository = ProductRepository()
     private val sellerReqRepo = SellerRequestRepository()
+    private val cartRepository = CartRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
@@ -144,4 +147,30 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun clearRequestResult() { requestResult.value = null }
+    
+    // ─── Cart ─────────────────────────────────────────────────────────────────
+    fun addToCart(product: Product, quantity: Int, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            onError("Vui lòng đăng nhập")
+            return
+        }
+        viewModelScope.launch {
+            val item = CartItem(
+                productId = product.id,
+                productName = product.name,
+                productImageUrl = product.imageUrl,
+                quantity = quantity,
+                price = product.price,
+                unit = product.unit,
+                sellerId = product.sellerId
+            )
+            val result = cartRepository.addToCart(uid, item)
+            if (result.isSuccess) {
+                onSuccess()
+            } else {
+                onError(result.exceptionOrNull()?.message ?: "Lỗi thêm vào giỏ hàng")
+            }
+        }
+    }
 }

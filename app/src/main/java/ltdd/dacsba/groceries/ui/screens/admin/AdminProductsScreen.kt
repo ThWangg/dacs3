@@ -76,8 +76,13 @@ fun AdminProductsContent(
     var showAddSheet by remember { mutableStateOf(false) }
     var editingProduct by remember { mutableStateOf<Product?>(null) }
     var deletingProduct by remember { mutableStateOf<Product?>(null) }
+    var filterCategory by remember { mutableStateOf<Category?>(null) }
 
-    val filtered = products.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    val filtered = products.filter { p -> 
+        val matchesQuery = p.name.contains(searchQuery, ignoreCase = true)
+        val matchesCategory = filterCategory == null || p.categoryId == filterCategory?.categoryId
+        matchesQuery && matchesCategory
+    }
 
     // Xác nhận xóa
     deletingProduct?.let { p ->
@@ -162,6 +167,35 @@ fun AdminProductsContent(
                     focusedContainerColor = Color.White
                 )
             )
+
+            androidx.compose.foundation.lazy.LazyRow(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    FilterChip(
+                        selected = filterCategory == null,
+                        onClick = { filterCategory = null },
+                        label = { Text("Tất cả") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = AdminGreenLight.copy(alpha = 0.2f),
+                            selectedLabelColor = AdminGreen
+                        )
+                    )
+                }
+                items(Category.defaultCategories) { cat ->
+                    val isSelected = filterCategory?.categoryId == cat.categoryId
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { filterCategory = cat },
+                        label = { Text("${cat.iconEmoji} ${cat.categoryName}") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = AdminGreenLight.copy(alpha = 0.2f),
+                            selectedLabelColor = AdminGreen
+                        )
+                    )
+                }
+            }
 
             if (isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = AdminGreenLight)
 

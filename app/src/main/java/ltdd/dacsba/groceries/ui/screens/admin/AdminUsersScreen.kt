@@ -64,10 +64,15 @@ fun AdminUsersContent(
 ) {
     var selectedUser by remember { mutableStateOf<User?>(null) }
     var searchQuery by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("ALL") }
 
-    val filtered = users.filter {
-        it.username.contains(searchQuery, ignoreCase = true) ||
-        it.email.contains(searchQuery, ignoreCase = true)
+    val roles = listOf("ALL", "BUYER", "SELLER", "ADMIN")
+
+    val filtered = users.filter { user ->
+        val matchesQuery = user.username.contains(searchQuery, ignoreCase = true) ||
+                           user.email.contains(searchQuery, ignoreCase = true)
+        val matchesRole = if (selectedRole == "ALL") true else user.role == selectedRole
+        matchesQuery && matchesRole
     }
 
     // Bottom Sheet chi tiết user (bao gồm quản lý avatar)
@@ -114,6 +119,24 @@ fun AdminUsersContent(
                 focusedContainerColor = Color.White
             )
         )
+
+        androidx.compose.foundation.lazy.LazyRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(roles) { role ->
+                val isSelected = selectedRole == role
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { selectedRole = role },
+                    label = { Text(if (role == "ALL") "Tất cả" else role) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = AdminGreenLight.copy(alpha = 0.2f),
+                        selectedLabelColor = AdminGreen
+                    )
+                )
+            }
+        }
 
         if (isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = AdminGreenLight)
 

@@ -123,14 +123,14 @@ fun EditProductContent(
             AppTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = "Product name",
+                label = "Tên sản phẩm",
                 modifier = Modifier.fillMaxWidth()
             )
 
             AppTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = "Description",
+                label = "Mô tả",
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -138,7 +138,7 @@ fun EditProductContent(
                 AppTextField(
                     value = price,
                     onValueChange = { price = it },
-                    label = "Price (đ)",
+                    label = "Đơn giá (đ)",
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -146,7 +146,7 @@ fun EditProductContent(
                 AppDropdown(
                     selectedValue = selectedUnit,
                     onValueSelected = { selectedUnit = it },
-                    label = "Unit",
+                    label = "Đơn vị",
                     options = unitOptions,
                     modifier = Modifier.weight(1f)
                 )
@@ -155,7 +155,7 @@ fun EditProductContent(
             AppTextField(
                 value = stock,
                 onValueChange = { stock = it },
-                label = "Stock",
+                label = "Sản luợng",
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
@@ -169,7 +169,7 @@ fun EditProductContent(
                         selectedUnit = ""
                     }
                 },
-                label = "Category",
+                label = "Loại",
                 options = categoryNames,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -177,7 +177,7 @@ fun EditProductContent(
             AppTextField(
                 value = imageUrl,
                 onValueChange = { imageUrl = it },
-                label = "Image",
+                label = "Ảnh sản phẩm",
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -202,7 +202,7 @@ fun EditProductContent(
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Save Changes")
+                    Text("Lưu thay đổi")
                 }
             }
         }

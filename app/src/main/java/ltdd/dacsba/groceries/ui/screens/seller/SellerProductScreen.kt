@@ -51,6 +51,7 @@ fun SellerProductScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SellerProductContent(
     products: List<Product>,
@@ -60,15 +61,18 @@ fun SellerProductContent(
     onDeleteClick: (String) -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(0) }
+    var filterCategory by remember { mutableStateOf<ltdd.dacsba.groceries.data.model.Category?>(null) }
     val tabs = listOf("Đã duyệt", "Chờ duyệt", "Bị từ chối")
     
     val filteredProducts = products.filter {
-        when (selectedTab) {
+        val matchesTab = when (selectedTab) {
             0 -> it.status == "APPROVED"
             1 -> it.status == "PENDING"
             2 -> it.status == "REJECTED"
             else -> false
         }
+        val matchesCategory = filterCategory == null || it.categoryId == filterCategory?.categoryId
+        matchesTab && matchesCategory
     }
 
     Column(
@@ -130,6 +134,35 @@ fun SellerProductContent(
                             color = if (selectedTab == index) Color(0xFF7CB342) else Color.Gray
                         )
                     }
+                )
+            }
+        }
+
+        androidx.compose.foundation.lazy.LazyRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item {
+                FilterChip(
+                    selected = filterCategory == null,
+                    onClick = { filterCategory = null },
+                    label = { Text("Tất cả") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF7CB342).copy(alpha = 0.2f),
+                        selectedLabelColor = Color(0xFF7CB342)
+                    )
+                )
+            }
+            items(ltdd.dacsba.groceries.data.model.Category.defaultCategories) { cat ->
+                val isSelected = filterCategory?.categoryId == cat.categoryId
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { filterCategory = cat },
+                    label = { Text("${cat.iconEmoji} ${cat.categoryName}") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF7CB342).copy(alpha = 0.2f),
+                        selectedLabelColor = Color(0xFF7CB342)
+                    )
                 )
             }
         }

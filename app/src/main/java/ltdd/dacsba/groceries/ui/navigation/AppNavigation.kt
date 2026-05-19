@@ -40,12 +40,35 @@ fun AppNavigation(navController: NavHostController) {
 
         // Buyer home screen
         composable(AppConstant.Routes.BUYER_HOME) {
-            ltdd.dacsba.groceries.ui.screens.user.BuyerHomeScreen()
+            ltdd.dacsba.groceries.ui.screens.user.MainBuyerScreen(
+                parentNavController = navController,
+                onLogout = {
+                    navController.navigate(AppConstant.Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onSwitchToSeller = {
+                    navController.navigate(AppConstant.Routes.SELLER_HOME) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
 
         // Seller main screen (có bottom bar tích hợp sẵn)
         composable(AppConstant.Routes.SELLER_HOME) {
-            MainSellerScreen()
+            MainSellerScreen(
+                onLogout = {
+                    navController.navigate(AppConstant.Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onSwitchToBuyer = {
+                    navController.navigate(AppConstant.Routes.BUYER_HOME) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

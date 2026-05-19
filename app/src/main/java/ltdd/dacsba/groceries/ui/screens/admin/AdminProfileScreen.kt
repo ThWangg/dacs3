@@ -73,7 +73,6 @@ fun AdminProfileScreen(
                 )
             } catch (_: Exception) { /* Một số URI không hỗ trợ persistent, bỏ qua */ }
             localAvatarUri = it
-            viewModel.uploadAdminAvatar(it)
         }
     }
 
@@ -97,6 +96,10 @@ fun AdminProfileScreen(
             onSave = { viewModel.saveProfile() },
             onCancelEdit = { viewModel.cancelEditProfile() },
             onPickAvatar = { openGallery() },
+            onConfirmAvatar = { uri ->
+                viewModel.uploadAdminAvatar(uri)
+                localAvatarUri = null // Reset after upload starts (or finishes)
+            },
             onRemoveAvatar = {
                 localAvatarUri = null
                 viewModel.removeAdminAvatar()
@@ -337,6 +340,7 @@ fun AdminProfileBottomSheet(
     onSave: () -> Unit,
     onCancelEdit: () -> Unit,
     onPickAvatar: () -> Unit,
+    onConfirmAvatar: (Uri) -> Unit,
     onRemoveAvatar: () -> Unit,
     onLogout: () -> Unit,
     onDismiss: () -> Unit
@@ -419,19 +423,37 @@ fun AdminProfileBottomSheet(
                 Text(email, color = Color.Gray, fontSize = 13.sp)
 
                 // 1. Đổi ảnh
-                Button(
-                    onClick = onPickAvatar,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AdminGreen),
-                    enabled = !isUploading
-                ) {
-                    Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        if (avatarUrl.isNotBlank() || localAvatarUri != null) "Đổi ảnh đại diện" else "Thêm ảnh đại diện",
-                        fontWeight = FontWeight.SemiBold
-                    )
+                if (localAvatarUri != null) {
+                    Button(
+                        onClick = { onConfirmAvatar(localAvatarUri) },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                        enabled = !isUploading
+                    ) {
+                        if (isUploading) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                        } else {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Xác nhận đổi ảnh", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onPickAvatar,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AdminGreen),
+                        enabled = !isUploading
+                    ) {
+                        Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            if (avatarUrl.isNotBlank()) "Đổi ảnh đại diện" else "Thêm ảnh đại diện",
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
 
                 // 2. Chỉnh sửa tên

@@ -1,0 +1,152 @@
+package ltdd.dacsba.groceries.ui.screens.user
+
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import ltdd.dacsba.groceries.data.model.CartItem
+import ltdd.dacsba.groceries.data.model.Order
+import ltdd.dacsba.groceries.data.model.OrderItem
+import ltdd.dacsba.groceries.data.repository.CartRepository
+import ltdd.dacsba.groceries.data.repository.OrderRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import ltdd.dacsba.groceries.data.constant.AppConstant
+import kotlinx.coroutines.tasks.await
+
+class BuyerCartViewModel : ViewModel() {
+    private val cartRepository = CartRepository()
+    private val orderRepository = OrderRepository()
+    private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
+    
+    val cartItems = mutableStateOf<List<CartItem>>(emptyList())
+    val selectedItemIds = mutableStateOf<Set<String>>(emptySet())
+    val isLoading = mutableStateOf(false)
+    val errorMessage = mutableStateOf<String?>(null)
+
+    init {
+        loadCart()
+    }
+
+    fun loadCart() {
+        val userId = auth.currentUser?.uid ?: return
+        isLoading.value = true
+        viewModelScope.launch {
+            val result = cartRepository.getCartItems(userId)
+            if (result.isSuccess) {
+                cartItems.value = result.getOrNull() ?: emptyList()
+            } else {
+                errorMessage.value = result.exceptionOrNull()?.message
+            }
+            isLoading.value = false
+        }
+    }
+
+    fun toggleSelection(productId: String) {
+        val current = selectedItemIds.value.toMutableSet()
+        if (current.contains(productId)) {
+            current.remove(productId)
+        } else {
+            current.add(productId)
+        }
+        selectedItemIds.value = current
+    }
+
+    fun selectAll(select: Boolean) {
+        if (select) {
+            selectedItemIds.value = cartItems.value.map { it.productId }.toSet()
+        } else {
+            selectedItemIds.value = emptySet()
+        }
+    }
+
+    fun removeFromCart(productId: String) {
+        val userId = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            val result = cartRepository.removeFromCart(userId, productId)
+            if (result.isSuccess) {
+                loadCart()
+            }
+        }
+    }
+
+    fun placeOrder(
+        shippingAddress: String,
+        note: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            onError("Vui lòng đăng nhập")
+            return
+        }
+
+        viewModelScope.launch {
+            isLoading.value = true
+            try {
+                // Get buyer name
+                val userDoc = db.collection(AppConstant.COLLECTION_USERS).document(userId).get().await()
+                val buyerName = userDoc.getString("username") ?: "Khách hàng"
+
+                // Filter only selected items
+                val selectedItems = cartItems.value.filter { selectedItemIds.value.contains(it.productId) }
+                if (selectedItems.isEmpty()) {
+                    onError("Chưa có sản phẩm nào được chọn")
+                    isLoading.value = false
+                    return@launch
+                }
+
+                // Group items by sellerId
+                val itemsBySeller = selectedItems.groupBy { it.sellerId }
+                
+                var successCount = 0
+                for ((sellerId, items) in itemsBySeller) {
+                    val orderItems = items.map {
+                        OrderItem(
+                            productId = it.productId,
+                            productName = it.productName,
+                            productImageUrl = it.productImageUrl,
+                            quantity = it.quantity,
+                            priceAtOrder = it.price,
+                            unit = it.unit
+                        )
+                    }
+                    val total = items.sumOf { it.price * it.quantity }
+
+                    val order = Order(
+                        buyerId = userId,
+                        buyerName = buyerName,
+                        sellerId = sellerId,
+                        items = orderItems,
+                        totalAmount = total,
+                        shippingAddress = shippingAddress,
+                        note = note
+                    )
+
+                    val result = orderRepository.placeOrder(order)
+                    if (result.isSuccess) {
+                        successCount++
+                    }
+                }
+
+                if (successCount > 0) {
+                    for (item in selectedItems) {
+                        cartRepository.removeFromCart(userId, item.productId)
+                    }
+                    selectedItemIds.value = emptySet()
+                    loadCart()
+                    onSuccess()
+                } else {
+                    onError("Không thể đặt hàng, vui lòng thử lại.")
+                }
+
+            } catch (e: Exception) {
+                onError(e.message ?: "Đã có lỗi xảy ra")
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+}
