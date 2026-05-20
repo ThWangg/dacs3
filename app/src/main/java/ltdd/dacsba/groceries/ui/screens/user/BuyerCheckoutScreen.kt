@@ -149,13 +149,14 @@ fun BuyerCheckoutScreen(
                                 shippingAddress = address,
                                 note = note,
                                 onSuccess = {
+                                    // Navigate immediately, không chờ snackbar
+                                    navController.navigate(BuyerRoutes.ORDERS) {
+                                        popUpTo(BuyerRoutes.HOME) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
+                                    // Snackbar riêng, không chặn navigation
                                     scope.launch {
                                         snackbarHostState.showSnackbar("Đặt hàng thành công!")
-                                        // Navigate back to orders or home
-                                        navController.navigate(BuyerRoutes.ORDERS) {
-                                            popUpTo(BuyerRoutes.HOME) { inclusive = false }
-                                            launchSingleTop = true
-                                        }
                                     }
                                 },
                                 onError = { err ->

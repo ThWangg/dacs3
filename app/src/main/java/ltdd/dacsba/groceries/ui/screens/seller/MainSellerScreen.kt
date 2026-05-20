@@ -33,11 +33,34 @@ object SellerRoutes {
 
 @Composable
 fun MainSellerScreen(
-    onLogout: () -> Unit,
+    onLogout: (String?) -> Unit,
     onSwitchToBuyer: () -> Unit
 ) {
     val navController = rememberNavController()
     val sellerViewModel: SellerViewModel = viewModel()
+
+    val auth = androidx.compose.runtime.remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+    val db = androidx.compose.runtime.remember { com.google.firebase.firestore.FirebaseFirestore.getInstance() }
+
+    androidx.compose.runtime.DisposableEffect(auth.currentUser) {
+        val uid = auth.currentUser?.uid ?: return@DisposableEffect onDispose {}
+        val listener = db.collection(ltdd.dacsba.groceries.data.constant.AppConstant.COLLECTION_USERS).document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                if (snapshot != null && snapshot.exists()) {
+                    val isDeactivated = snapshot.getBoolean("isDeactivated") ?: false
+                    if (isDeactivated) {
+                        auth.signOut()
+                        onLogout("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.")
+                    }
+                }
+            }
+
+        onDispose {
+            listener.remove()
+        }
+    }
+
 
     val bottomNavItems = listOf(
         BottomNavItem("Dashboard", SellerRoutes.DASHBOARD, Icons.Default.Home),
@@ -81,7 +104,7 @@ fun MainSellerScreen(
             composable(SellerRoutes.PROFILE) {
                 SellerProfileScreen(
                     navController = navController,
-                    onLogout = onLogout,
+                    onLogout = { onLogout(null) },
                     onSwitchToBuyer = onSwitchToBuyer
                 )
             }

@@ -149,7 +149,7 @@ fun AdminDashboardContent(
             AdminStatCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.AccountCircle,
-                label = "Buyers",
+                label = "Người mua",
                 value = totalBuyers.toString(),
                 containerColor = Color(0xFFFFF3E0),
                 iconColor = Color(0xFFE65100)
@@ -157,7 +157,7 @@ fun AdminDashboardContent(
             AdminStatCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Store,
-                label = "Sellers",
+                label = "Người bán",
                 value = totalSellers.toString(),
                 containerColor = Color(0xFFF3E5F5),
                 iconColor = Color(0xFF7B1FA2)
@@ -197,14 +197,14 @@ fun AdminDashboardContent(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    "Thông tin nhanh",
+                    "Thông tin hệ thôn",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
                 Spacer(Modifier.height(12.dp))
                 AdminInfoRow(Icons.Default.CheckCircle, "Trạng thái hệ thống", "Hoạt động", Color(0xFF2E7D32))
                 HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFF0F0F0))
-                AdminInfoRow(Icons.Default.Star, "Phiên bản app", "v1.0.0", Color(0xFFE65100))
+                AdminInfoRow(Icons.Default.Star, "Phiên bản ứng dụng", "v1.0.0", Color(0xFFE65100))
                 HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFF0F0F0))
                 AdminInfoRow(Icons.Default.Security, "Bảo mật", "Firebase Auth", Color(0xFF1565C0))
             }

@@ -24,6 +24,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import ltdd.dacsba.groceries.data.model.CartItem
 import ltdd.dacsba.groceries.ui.components.SmartImage
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +36,7 @@ fun BuyerCartScreen(
     val cartItems by viewModel.cartItems
     val selectedItemIds by viewModel.selectedItemIds
     val isLoading by viewModel.isLoading
+    val context = LocalContext.current
     
     // Automatically reload when navigating back here
     LaunchedEffect(Unit) {
@@ -78,7 +81,12 @@ fun BuyerCartScreen(
                             item = item,
                             isSelected = isSelected,
                             onToggleSelect = { viewModel.toggleSelection(item.productId) },
-                            onRemove = { viewModel.removeFromCart(item.productId) }
+                            onRemove = { viewModel.removeFromCart(item.productId) },
+                            onQuantityChange = { newQty ->
+                                viewModel.updateQuantity(item.productId, newQty) { errorMsg ->
+                                    Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         )
                     }
                 }
@@ -104,7 +112,8 @@ fun CartItemRow(
     item: CartItem, 
     isSelected: Boolean,
     onToggleSelect: () -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onQuantityChange: (Int) -> Unit
 ) {
     val formattedPrice = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(item.price)
     
@@ -147,10 +156,48 @@ fun CartItemRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = item.productName, fontWeight = FontWeight.Bold, color = DarkNavy, fontSize = 16.sp, maxLines = 2)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "${formattedPrice}đ", color = AccentOrange, fontWeight = FontWeight.SemiBold)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Số lượng: ${item.quantity}", color = Color.Gray, fontSize = 13.sp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "${formattedPrice}đ", color = AccentOrange, fontWeight = FontWeight.SemiBold)
+                    
+                    // Nút tăng/giảm số lượng
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clickable { onQuantityChange(item.quantity - 1) },
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF2F2F7)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("-", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkNavy)
+                            }
+                        }
+                        
+                        Text(text = item.quantity.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkNavy)
+                        
+                        Surface(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clickable { onQuantityChange(item.quantity + 1) },
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF2F2F7)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("+", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkNavy)
+                            }
+                        }
+                    }
+                }
             }
+            
+            Spacer(modifier = Modifier.width(4.dp))
             
             IconButton(onClick = onRemove) {
                 Icon(Icons.Default.Delete, contentDescription = "Xóa", tint = Color.Red.copy(alpha = 0.7f))

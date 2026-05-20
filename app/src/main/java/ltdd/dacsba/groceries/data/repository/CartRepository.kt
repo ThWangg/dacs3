@@ -43,6 +43,16 @@ class CartRepository {
             Result.failure(e)
         }
     }
+
+    suspend fun updateQuantity(userId: String, productId: String, newQuantity: Int): Result<Boolean> {
+        return try {
+            usersCollection.document(userId).collection("cart").document(productId)
+                .update("quantity", newQuantity).await()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     
     suspend fun clearCart(userId: String): Result<Boolean> {
         return try {

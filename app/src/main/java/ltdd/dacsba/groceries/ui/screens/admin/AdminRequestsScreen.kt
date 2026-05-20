@@ -293,7 +293,8 @@ fun ProductApprovalCard(
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(product.name.ifBlank { "Sản phẩm không tên" }, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    Text("${product.price}đ / ${product.unit}", fontSize = 13.sp, color = AdminGreen, fontWeight = FontWeight.SemiBold)
+                    val formattedPrice = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(product.price)
+                    Text("${formattedPrice}đ / ${product.unit}", fontSize = 13.sp, color = AdminGreen, fontWeight = FontWeight.SemiBold)
                     Text("Stock: ${product.stock} | Lượt bán: ${product.soldCount}", fontSize = 11.sp, color = Color.Gray)
                     Text("Đăng lúc: " + SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(product.createdAt)), fontSize = 11.sp, color = Color(0xFF9E9E9E))
                 }

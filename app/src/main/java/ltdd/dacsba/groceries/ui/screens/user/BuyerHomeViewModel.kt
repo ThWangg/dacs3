@@ -27,6 +27,7 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
     private val db = FirebaseFirestore.getInstance()
 
     var products = mutableStateOf<List<Product>>(emptyList())
+    var sellerNames = mutableStateOf<Map<String, String>>(emptyMap())
     var isLoading = mutableStateOf(false)
     var message = mutableStateOf<String?>(null)
 
@@ -53,10 +54,31 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
             isLoading.value = true
             message.value = null
             val result = productRepository.getAllProducts()
-            result.onSuccess { list -> products.value = list }
+            result.onSuccess { list ->
+                products.value = list
+                // Load tên seller cho tất cả sản phẩm
+                loadSellerNames(list.map { it.sellerId }.distinct())
+            }
             result.onFailure { error -> message.value = error.message }
             isLoading.value = false
         }
+    }
+
+    private suspend fun loadSellerNames(sellerIds: List<String>) {
+        if (sellerIds.isEmpty()) return
+        try {
+            val nameMap = mutableMapOf<String, String>()
+            for (sellerId in sellerIds) {
+                if (sellerId.isBlank()) continue
+                val doc = db.collection(AppConstant.COLLECTION_USERS)
+                    .document(sellerId).get().await()
+                val name = doc.getString("shopName")
+                    ?: doc.getString("username")
+                    ?: "Shop"
+                nameMap[sellerId] = name
+            }
+            sellerNames.value = nameMap
+        } catch (_: Exception) {}
     }
 
     fun fetchProductsByCategory(categoryID: String) {

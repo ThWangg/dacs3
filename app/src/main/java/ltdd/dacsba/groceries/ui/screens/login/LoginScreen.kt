@@ -29,6 +29,7 @@ import ltdd.dacsba.groceries.ui.components.AppTextField
 fun LoginScreen( //logic
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
+    initialMessage: String? = null
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -36,6 +37,27 @@ fun LoginScreen( //logic
     val isLoading by authViewModel.isLoading
     val errorMessage by authViewModel.message
     val loginSuccess by authViewModel.loginSuccess
+
+    val autoLoginChecking by authViewModel.autoLoginChecking
+
+    LaunchedEffect(initialMessage) {
+        if (initialMessage != null) {
+            authViewModel.message.value = initialMessage
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        authViewModel.checkAutoLogin { user ->
+            val route = when (user.role) {
+                AppConstant.Roles.ADMIN  -> AppConstant.Routes.ADMIN_HOME
+                AppConstant.Roles.SELLER -> AppConstant.Routes.SELLER_HOME
+                else                     -> AppConstant.Routes.BUYER_HOME
+            }
+            navController.navigate(route) {
+                popUpTo(AppConstant.Routes.LOGIN) { inclusive = true }
+            }
+        }
+    }
 
     LaunchedEffect(loginSuccess) {
         loginSuccess?.let { user ->
@@ -50,16 +72,29 @@ fun LoginScreen( //logic
         }
     }
 
-    LoginContent(
-        email = email,
-        password = password,
-        isLoading = isLoading,
-        errorMessage = errorMessage,
-        onEmailChange = { email = it },
-        onPasswordChange = { password = it },
-        onLoginClick = { authViewModel.login(email, password) },
-        onSignUpClick = { navController.navigate(AppConstant.Routes.REGISTER) }
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        LoginContent(
+            email = email,
+            password = password,
+            isLoading = isLoading,
+            errorMessage = errorMessage,
+            onEmailChange = { email = it },
+            onPasswordChange = { password = it },
+            onLoginClick = { authViewModel.login(email, password) },
+            onSignUpClick = { navController.navigate(AppConstant.Routes.REGISTER) }
+        )
+
+        if (autoLoginChecking) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF7CB342))
+            }
+        }
+    }
 }
 
 @Composable
@@ -130,13 +165,13 @@ fun LoginContent( // UI để preview
             Spacer(modifier = Modifier.height(30.dp))
 
             Text(
-                text = "Login",
+                text = "Đăng nhập",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold
             )
 
             Text(
-                text = "Please sign in to continue",
+                text = "Đăng nhập để tiếp tục",
                 color = Color.Gray,
                 fontSize = 16.sp)
 
@@ -153,7 +188,7 @@ fun LoginContent( // UI để preview
             AppTextField(
                 value = password,
                 onValueChange = onPasswordChange,
-                label = "Password",
+                label = "Mật khẩu",
                 isPassword = true,
                 modifier = Modifier.padding(top = 15.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
@@ -190,7 +225,7 @@ fun LoginContent( // UI để preview
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(text = "Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "Đăng nhập", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -202,10 +237,10 @@ fun LoginContent( // UI để preview
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Have no account?", color = Color.Gray, fontSize = 16.sp)
+                Text(text = "Chưa có tài khoản?", color = Color.Gray, fontSize = 16.sp)
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Sign up",
+                    text = "Đăng kí",
                     color = Color(0xFF7CB342),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,

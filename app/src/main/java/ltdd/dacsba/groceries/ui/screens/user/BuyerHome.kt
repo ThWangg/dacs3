@@ -54,7 +54,12 @@ fun BuyerHomeScreen(viewModel: BuyerHomeViewModel = viewModel(), navController: 
     var isSearchVisible by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedProduct by remember { mutableStateOf<ltdd.dacsba.groceries.data.model.Product?>(null) }
+    val sellerNames by viewModel.sellerNames
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchProducts()
+    }
 
     LaunchedEffect(requestResult) {
         requestResult?.let { snackbarHostState.showSnackbar(it); viewModel.clearRequestResult() }
@@ -66,6 +71,7 @@ fun BuyerHomeScreen(viewModel: BuyerHomeViewModel = viewModel(), navController: 
     if (selectedProduct != null) {
         ProductDetailSheet(
             product = selectedProduct!!,
+            sellerName = sellerNames[selectedProduct!!.sellerId] ?: "",
             onDismiss = { selectedProduct = null },
             onAddToCart = { quantity ->
                 val product = selectedProduct
@@ -204,6 +210,7 @@ fun BuyerHomeBody(
 ) {
     val products by viewModel.products
     val isLoading by viewModel.isLoading
+    val sellerNames by viewModel.sellerNames
 
     var selectedCategory by remember { mutableStateOf<ltdd.dacsba.groceries.data.model.Category?>(null) }
     var sortOrder by remember { mutableStateOf(0) } // 0: None, 1: Low to High, 2: High to Low
@@ -313,7 +320,11 @@ fun BuyerHomeBody(
                 modifier = Modifier.fillMaxWidth().weight(1f) // Chiếm 8 phần (toàn bộ khoảng trống còn lại)
             ) {
                 items(filtered) { product ->
-                    ProductCard(product = product, onClick = { onProductClick(product) })
+                    ProductCard(
+                        product = product,
+                        sellerName = sellerNames[product.sellerId] ?: "Shop",
+                        onClick = { onProductClick(product) }
+                    )
                 }
             }
         }
@@ -321,17 +332,27 @@ fun BuyerHomeBody(
 }
 
 @Composable
-fun ProductCard(product: Product, onClick: () -> Unit) {
+fun ProductCard(product: Product, sellerName: String = "", onClick: () -> Unit) {
     val formattedPrice = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(product.price)
+    val isOutOfStock = product.stock <= 0
+
     Card(
-        modifier = Modifier.padding(8.dp).fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clickable(enabled = !isOutOfStock) { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
+            // Hình ảnh + badge hết hàng
             Box(
-                modifier = Modifier.fillMaxWidth().height(100.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFF0F0F0)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF0F0F0)),
                 contentAlignment = Alignment.Center
             ) {
                 if (product.imageUrl.isNotBlank()) {
@@ -344,39 +365,103 @@ fun ProductCard(product: Product, onClick: () -> Unit) {
                 } else {
                     Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.LightGray)
                 }
+                // Overlay hết hàng
+                if (isOutOfStock) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.45f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Surface(
+                            color = Color(0xFFEF4444),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = "Hết hàng",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = product.name, fontWeight = FontWeight.Bold, color = DarkNavy, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-            Text(text = "Kho: ${product.stock}", fontSize = 12.sp, color = Color.Gray)
+            Text(
+                text = product.name,
+                fontWeight = FontWeight.Bold,
+                color = if (isOutOfStock) Color.Gray else DarkNavy,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+            // Tên shop & Đã bán
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (sellerName.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Icon(
+                            imageVector = Icons.Default.Store,
+                            contentDescription = null,
+                            tint = Color(0xFF9E9E9E),
+                            modifier = Modifier.size(11.dp)
+                        )
+                        Spacer(Modifier.width(3.dp))
+                        Text(
+                            text = sellerName,
+                            fontSize = 11.sp,
+                            color = Color(0xFF9E9E9E),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                Text(
+                    text = "Đã bán ${product.soldCount}",
+                    fontSize = 10.sp,
+                    color = Color.Gray
+                )
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "${formattedPrice}đ/${product.unit}", fontWeight = FontWeight.Bold, color = AccentOrange, fontSize = 13.sp)
+                Text(
+                    text = "${formattedPrice}đ/${product.unit}",
+                    fontWeight = FontWeight.Bold,
+                    color = if (isOutOfStock) Color.Gray else AccentOrange,
+                    fontSize = 13.sp
+                )
                 Surface(
-                    modifier = Modifier.size(32.dp).clickable { onClick() }, 
-                    shape = RoundedCornerShape(8.dp), 
-                    color = AccentOrange
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clickable(enabled = !isOutOfStock) { onClick() },
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isOutOfStock) Color(0xFFE0E0E0) else AccentOrange
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.padding(4.dp))
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        tint = if (isOutOfStock) Color.Gray else Color.White,
+                        modifier = Modifier.padding(4.dp)
+                    )
                 }
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun BuyerHomeScreenPreview() {
-    BuyerHomeScreen()
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailSheet(
     product: ltdd.dacsba.groceries.data.model.Product,
+    sellerName: String = "",
     onDismiss: () -> Unit,
     onAddToCart: (Int) -> Unit,
     onBuyNow: (Int) -> Unit
@@ -384,6 +469,7 @@ fun ProductDetailSheet(
     var quantity by remember { mutableStateOf(1) }
     val formattedPrice = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(product.price)
     val totalPrice = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(product.price * quantity)
+    val isOutOfStock = product.stock <= 0
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -421,77 +507,168 @@ fun ProductDetailSheet(
                         Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.LightGray)
                     }
                 }
-                
+
                 Column {
                     Text(text = product.name, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkNavy)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "${formattedPrice}đ / ${product.unit}", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = AccentOrange)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Kho: ${product.stock}", fontSize = 14.sp, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // Tên shop
+                    if (sellerName.isNotBlank()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Store,
+                                contentDescription = null,
+                                tint = Color(0xFF9E9E9E),
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(text = sellerName, fontSize = 13.sp, color = Color(0xFF9E9E9E))
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                    Text(
+                        text = "${formattedPrice}đ / ${product.unit}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isOutOfStock) Color.Gray else AccentOrange
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    if (isOutOfStock) {
+                        Surface(color = Color(0xFFEF4444), shape = RoundedCornerShape(6.dp)) {
+                            Text(
+                                text = "⚠️ Hết hàng",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "Kho: ${product.stock}", fontSize = 14.sp, color = Color.Gray)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(modifier = Modifier.size(width = 1.dp, height = 12.dp).background(Color.LightGray))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "Đã bán: ${product.soldCount}", fontSize = 14.sp, color = Color.Gray)
+                        }
+                    }
+                }
+            }
+
+            if (product.description.isNotBlank()) {
+                HorizontalDivider(color = Color(0xFFF0F0F0))
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Mô tả sản phẩm",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkNavy
+                    )
+                    Text(
+                        text = product.description,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        lineHeight = 20.sp
+                    )
                 }
             }
 
             HorizontalDivider(color = Color(0xFFF0F0F0))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Số lượng", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            if (!isOutOfStock) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        modifier = Modifier.size(32.dp).clickable(enabled = quantity > 1) { quantity-- },
-                        shape = CircleShape,
-                        color = if (quantity > 1) Color(0xFFF0F0F0) else Color(0xFFFAFAFA)
+                    Text("Số lượng", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text("-", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = if (quantity > 1) Color.Black else Color.LightGray)
+                        Surface(
+                            modifier = Modifier.size(32.dp).clickable(enabled = quantity > 1) { quantity-- },
+                            shape = CircleShape,
+                            color = if (quantity > 1) Color(0xFFF0F0F0) else Color(0xFFFAFAFA)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("-", fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                                    color = if (quantity > 1) Color.Black else Color.LightGray)
+                            }
                         }
-                    }
-                    Text(text = quantity.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Surface(
-                        modifier = Modifier.size(32.dp).clickable(enabled = quantity < product.stock) { quantity++ },
-                        shape = CircleShape,
-                        color = if (quantity < product.stock) Color(0xFFF0F0F0) else Color(0xFFFAFAFA)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text("+", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = if (quantity < product.stock) Color.Black else Color.LightGray)
+                        Text(text = quantity.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Surface(
+                            modifier = Modifier.size(32.dp).clickable(enabled = quantity < product.stock) { quantity++ },
+                            shape = CircleShape,
+                            color = if (quantity < product.stock) Color(0xFFF0F0F0) else Color(0xFFFAFAFA)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("+", fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                                    color = if (quantity < product.stock) Color.Black else Color.LightGray)
+                            }
                         }
                     }
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { onAddToCart(quantity) },
-                    modifier = Modifier.weight(1f).height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentOrange),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, AccentOrange)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Thêm vào giỏ", fontWeight = FontWeight.SemiBold)
+                    OutlinedButton(
+                        onClick = { onAddToCart(quantity) },
+                        modifier = Modifier.weight(1f).height(50.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentOrange),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, AccentOrange)
+                    ) {
+                        Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Thêm vào giỏ", fontWeight = FontWeight.SemiBold)
+                    }
+                    Button(
+                        onClick = { onBuyNow(quantity) },
+                        modifier = Modifier.weight(1f).height(50.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentOrange)
+                    ) {
+                        Text("Mua ngay - ${totalPrice}đ", fontWeight = FontWeight.Bold)
+                    }
                 }
-                
-                Button(
-                    onClick = { onBuyNow(quantity) },
-                    modifier = Modifier.weight(1f).height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentOrange)
+            } else {
+                // Hết hàng — chỉ hiển thông báo
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFFFEF2F2),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Mua ngay - ${totalPrice}đ", fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Block,
+                            contentDescription = null,
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Sản phẩm này đã hết hàng, vui lòng quay lại sau.",
+                            color = Color(0xFFEF4444),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun BuyerHomeScreenPreview() {
+    BuyerHomeScreen()
 }

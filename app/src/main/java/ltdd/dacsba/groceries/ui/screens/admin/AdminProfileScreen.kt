@@ -270,7 +270,7 @@ fun AdminProfileContent(
             elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
-                SettingsRow(icon = Icons.Default.Edit, label = "Chỉnh sửa Profile", iconColor = AdminGreen, onClick = onAvatarClick)
+                SettingsRow(icon = Icons.Default.Edit, label = "Chỉnh sửa Thông tin", iconColor = AdminGreen, onClick = onAvatarClick)
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F0F0))
                 SettingsRow(icon = Icons.Default.Info, label = "Về ứng dụng", iconColor = Color(0xFF1565C0), onClick = {})
             }
@@ -485,7 +485,7 @@ fun AdminProfileBottomSheet(
 
             } else {
                 // Edit mode
-                Text("Chỉnh sửa Profile", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Chỉnh sửa Thông tin", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 AppTextField(value = editUsername, onValueChange = onEditUsername, label = "Tên hiển thị", modifier = Modifier.fillMaxWidth())
                 Button(
                     onClick = onSave,

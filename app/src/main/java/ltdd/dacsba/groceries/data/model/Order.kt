@@ -24,9 +24,9 @@ data class OrderItem(
 )
 
 enum class OrderStatus(val displayName: String) {
-    PENDING("Pending"),
-    CONFIRMED("Confirmed"),
-    SHIPPING("Shipping"),
-    DELIVERED("Delivered"),
-    CANCELLED("Cancelled")
+    PENDING("Chờ xét duyệt"),
+    CONFIRMED("Đã xác nhận"),
+    SHIPPING("Đang giao hàng"),
+    DELIVERED("Đã giao"),
+    CANCELLED("Đã hủy")
 }

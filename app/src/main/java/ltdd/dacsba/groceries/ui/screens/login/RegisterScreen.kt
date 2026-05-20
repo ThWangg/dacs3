@@ -174,13 +174,13 @@ fun RegisterContent(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "Create Account",
+                text = "Tạo tài khoản mới",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold
             )
             
             Text(
-                text = "Please fill your information",
+                text = "Vui lòng điền thông tin",
                 color = Color.Gray,
                 fontSize = 18.sp
             )
@@ -192,7 +192,7 @@ fun RegisterContent(
                 AppTextField(
                     value = username,
                     onValueChange = onUsernameChange ,
-                    label = "Username",
+                    label = "Tên người dùng",
                     modifier = Modifier
                         .width(300.dp)
                 )
@@ -207,7 +207,7 @@ fun RegisterContent(
                 AppTextField(
                     value = password,
                     onValueChange = onPasswordChange,
-                    label = "Password",
+                    label = "Mật khẩu",
                     isPassword = true,
                     modifier = Modifier.padding(top = 10.dp)
                 )
@@ -215,14 +215,9 @@ fun RegisterContent(
                 AppTextField(
                     value = confirmPassword,
                     onValueChange = onConfirmPasswordChange,
-                    label = "Confirm Password",
+                    label = "Xác nhận mật khẩu",
                     isPassword = true,
                     modifier = Modifier.padding(top = 10.dp)
-                )
-
-                RoleSelection(
-                    selectedRole = selectedRole,
-                    onRoleSelected = { selectedRole = it }
                 )
 
                 errorMessage?.let {
@@ -259,7 +254,7 @@ fun RegisterContent(
                         )
                     } else {
                         Text(
-                            text = "Register",
+                            text = "Đăng kí",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold)
                     }
@@ -273,10 +268,10 @@ fun RegisterContent(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Already has an account ?", color = Color.Gray, fontSize = 16.sp)
+                    Text(text = "Đã có tài khoản?", color = Color.Gray, fontSize = 16.sp)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Sign in",
+                        text = "Đăng nhập",
                         color = Color(0xFF7CB342),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
@@ -288,47 +283,47 @@ fun RegisterContent(
     }
 }
 
-@Composable
-fun RoleSelection(
-    selectedRole: String,
-    onRoleSelected: (String) -> Unit
-){
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 30.dp)
-    ) {
-        Text(text = "Register as:", fontWeight = FontWeight.Bold)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            //buyer
-            RadioButton(
-                selected = selectedRole == AppConstant.Roles.BUYER,
-                onClick = { onRoleSelected(AppConstant.Roles.BUYER) }
-            )
-
-            Text(
-                text = "Buyer",
-                modifier = Modifier.clickable { onRoleSelected(AppConstant.Roles.BUYER) }
-            )
-            
-            Spacer(modifier = Modifier.width(20.dp))
-
-            //seller
-            RadioButton(
-                selected = selectedRole == AppConstant.Roles.SELLER,
-                onClick = { onRoleSelected(AppConstant.Roles.SELLER) }
-            )
-            Text(
-                text = "Seller",
-                modifier = Modifier.clickable { onRoleSelected(AppConstant.Roles.SELLER) }
-            )
-        }
-    }
-}
+//@Composable
+//fun RoleSelection(
+//    selectedRole: String,
+//    onRoleSelected: (String) -> Unit
+//){
+//    Column(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(top = 30.dp)
+//    ) {
+//        Text(text = "Register as:", fontWeight = FontWeight.Bold)
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//
+//            //buyer
+//            RadioButton(
+//                selected = selectedRole == AppConstant.Roles.BUYER,
+//                onClick = { onRoleSelected(AppConstant.Roles.BUYER) }
+//            )
+//
+//            Text(
+//                text = "Buyer",
+//                modifier = Modifier.clickable { onRoleSelected(AppConstant.Roles.BUYER) }
+//            )
+//
+//            Spacer(modifier = Modifier.width(20.dp))
+//
+//            //seller
+//            RadioButton(
+//                selected = selectedRole == AppConstant.Roles.SELLER,
+//                onClick = { onRoleSelected(AppConstant.Roles.SELLER) }
+//            )
+//            Text(
+//                text = "Seller",
+//                modifier = Modifier.clickable { onRoleSelected(AppConstant.Roles.SELLER) }
+//            )
+//        }
+//    }
+//}
 
 
 @Preview(showBackground = true, showSystemUi = true)

@@ -102,6 +102,7 @@ class BuyerCartViewModel : ViewModel() {
                 val itemsBySeller = selectedItems.groupBy { it.sellerId }
                 
                 var successCount = 0
+                var firstErrorMessage: String? = null
                 for ((sellerId, items) in itemsBySeller) {
                     val orderItems = items.map {
                         OrderItem(
@@ -128,6 +129,10 @@ class BuyerCartViewModel : ViewModel() {
                     val result = orderRepository.placeOrder(order)
                     if (result.isSuccess) {
                         successCount++
+                    } else {
+                        if (firstErrorMessage == null) {
+                            firstErrorMessage = result.exceptionOrNull()?.message
+                        }
                     }
                 }
 
@@ -139,13 +144,42 @@ class BuyerCartViewModel : ViewModel() {
                     loadCart()
                     onSuccess()
                 } else {
-                    onError("Không thể đặt hàng, vui lòng thử lại.")
+                    onError(firstErrorMessage ?: "Không thể đặt hàng, vui lòng thử lại.")
                 }
 
             } catch (e: Exception) {
                 onError(e.message ?: "Đã có lỗi xảy ra")
             } finally {
                 isLoading.value = false
+            }
+        }
+    }
+
+    fun updateQuantity(productId: String, newQuantity: Int, onError: (String) -> Unit) {
+        val userId = auth.currentUser?.uid ?: return
+        if (newQuantity <= 0) {
+            removeFromCart(productId)
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val productDoc = db.collection(AppConstant.COLLECTION_PRODUCTS).document(productId).get().await()
+                if (productDoc.exists()) {
+                    val stock = productDoc.getLong("stock")?.toInt() ?: 0
+                    if (newQuantity > stock) {
+                        onError("Không thể tăng thêm. Chỉ còn $stock sản phẩm trong kho.")
+                        return@launch
+                    }
+                }
+                
+                val result = cartRepository.updateQuantity(userId, productId, newQuantity)
+                if (result.isSuccess) {
+                    loadCart()
+                } else {
+                    onError(result.exceptionOrNull()?.message ?: "Lỗi cập nhật số lượng")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Đã xảy ra lỗi")
             }
         }
     }

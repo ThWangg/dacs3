@@ -22,6 +22,16 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.remember
+import ltdd.dacsba.groceries.data.model.SellerActivity
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,12 +63,16 @@ fun SellerDashboardScreen(
     val productCount by viewModel.totalProducts
     val totalSold by viewModel.totalSold
     val avgRating by viewModel.avgRating
+    val totalStock by viewModel.totalStock
+    val activities by viewModel.activities
     val isLoading by viewModel.isLoading
 
     SellerDashboardContent(
         productCount = productCount,
         totalSold = totalSold,
         avgRating = avgRating,
+        totalStock = totalStock,
+        activities = activities,
         isLoading = isLoading,
         onRefresh = { viewModel.refreshData() },
         onNotificationClick = { navController.navigate(SellerRoutes.NOTIFICATIONS) }
@@ -70,6 +84,8 @@ fun SellerDashboardContent(
     productCount: Int,
     totalSold: Int,
     avgRating: Double,
+    totalStock: Int,
+    activities: List<SellerActivity>,
     isLoading: Boolean,
     onRefresh: () -> Unit,
     onNotificationClick: () -> Unit
@@ -128,7 +144,7 @@ fun SellerDashboardContent(
                 CircularProgressIndicator(color = Color(0xFF7CB342))
             }
         } else {
-            //hanfg 1
+            //hang 1
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -169,7 +185,7 @@ fun SellerDashboardContent(
                 StatCard(
                     modifier = Modifier.weight(1f),
                     title = "Stock",
-                    value = "99+",
+                    value = totalStock.toString(),
                     icon = Icons.Default.List,
                     containerColor = Color(0xFFF3E5F5),
                     contentColor = Color(0xFF7B1FA2)
@@ -184,32 +200,125 @@ fun SellerDashboardContent(
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp
         )
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column {
-                ListItem(
-                    headlineContent = { Text("Order #12345") },
-                    supportingContent = { Text("Waiting to confirm") },
-                    leadingContent = {
-                        Surface(
-                            shape = CircleShape,
-                            color = Color(0xFFFFF9C4)
-                        ) {
-                            Icon(
-                                Icons.Default.List,
-                                contentDescription = null,
-                                modifier = Modifier.padding(8.dp),
-                                tint = Color(0xFFFBC02D)
+        
+        if (activities.isEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Chưa có hoạt động nào gần đây",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        } else {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Column {
+                    activities.take(10).forEachIndexed { index, activity ->
+                        val icon = when (activity.type) {
+                            "ADD_PRODUCT" -> Icons.Default.Add
+                            "EDIT_PRODUCT" -> Icons.Default.Edit
+                            "DELETE_PRODUCT" -> Icons.Default.Delete
+                            "UPDATE_PROFILE" -> Icons.Default.Person
+                            "UPDATE_AVATAR" -> Icons.Default.Person
+                            "REMOVE_AVATAR" -> Icons.Default.Person
+                            "ORDER_CONFIRM" -> Icons.Default.CheckCircle
+                            "ORDER_SHIPPING" -> Icons.Default.List
+                            "ORDER_DELIVERED" -> Icons.Default.CheckCircle
+                            "ORDER_CANCEL" -> Icons.Default.Close
+                            else -> Icons.Default.List
+                        }
+
+                        val tintColor = when (activity.type) {
+                            "ADD_PRODUCT" -> Color(0xFF4CAF50)
+                            "EDIT_PRODUCT" -> Color(0xFF2196F3)
+                            "DELETE_PRODUCT" -> Color(0xFFF44336)
+                            "UPDATE_PROFILE", "UPDATE_AVATAR", "REMOVE_AVATAR" -> Color(0xFF9C27B0)
+                            "ORDER_CONFIRM", "ORDER_SHIPPING", "ORDER_DELIVERED" -> Color(0xFF4CAF50)
+                            "ORDER_CANCEL" -> Color(0xFFF44336)
+                            else -> Color.Gray
+                        }
+
+                        val bgColor = when (activity.type) {
+                            "ADD_PRODUCT" -> Color(0xFFE8F5E9)
+                            "EDIT_PRODUCT" -> Color(0xFFE3F2FD)
+                            "DELETE_PRODUCT" -> Color(0xFFFFEBEE)
+                            "UPDATE_PROFILE", "UPDATE_AVATAR", "REMOVE_AVATAR" -> Color(0xFFF3E5F5)
+                            "ORDER_CONFIRM", "ORDER_SHIPPING", "ORDER_DELIVERED" -> Color(0xFFE8F5E9)
+                            "ORDER_CANCEL" -> Color(0xFFFFEBEE)
+                            else -> Color(0xFFF5F5F5)
+                        }
+
+                        val formattedTime = remember(activity.timestamp) {
+                            val sdf = SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.getDefault())
+                            sdf.format(Date(activity.timestamp))
+                        }
+
+                        ListItem(
+                            headlineContent = { 
+                                Text(
+                                    text = activity.title,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                ) 
+                            },
+                            supportingContent = { 
+                                Column {
+                                    Text(
+                                        text = activity.message,
+                                        fontSize = 13.sp,
+                                        color = Color.DarkGray
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = formattedTime,
+                                        fontSize = 11.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            },
+                            leadingContent = {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = bgColor
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(8.dp),
+                                        tint = tintColor
+                                    )
+                                }
+                            }
+                        )
+                        if (index < activities.size - 1 && index < 9) {
+                            androidx.compose.material3.HorizontalDivider(
+                                color = Color(0xFFEEEEEE),
+                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             )
                         }
                     }
-                )
+                }
             }
         }
     }
@@ -263,6 +372,8 @@ fun SellerDashboardPreview() {
         productCount = 12,
         totalSold = 450,
         avgRating = 4.7,
+        totalStock = 1250,
+        activities = emptyList(),
         isLoading = false,
         onRefresh = {},
         onNotificationClick = {}

@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import ltdd.dacsba.groceries.data.constant.AppConstant
 import ltdd.dacsba.groceries.data.repository.ImageUtils
+import ltdd.dacsba.groceries.data.model.SellerActivity
 
 class SellerProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
@@ -126,6 +127,19 @@ class SellerProfileViewModel(application: Application) : AndroidViewModel(applic
                     .update(updates)
                     .await()
 
+                val changes = mutableListOf<String>()
+                if (originalUsername != uiState.value.username) changes.add("tên tài khoản")
+                if (originalShopName != uiState.value.shopName) changes.add("tên cửa hàng")
+                if (originalPhone != uiState.value.phone) changes.add("số điện thoại")
+                
+                val msg = if (changes.isNotEmpty()) {
+                    "Đã sửa ${changes.joinToString(", ")} của cửa hàng"
+                } else {
+                    "Đã cập nhật thông tin cửa hàng"
+                }
+                
+                SellerActivity.log(currentUser.uid, "Cập nhật thông tin", msg, "UPDATE_PROFILE")
+
                 originalUsername = uiState.value.username
                 originalShopName = uiState.value.shopName
                 originalPhone = uiState.value.phone
@@ -158,6 +172,8 @@ class SellerProfileViewModel(application: Application) : AndroidViewModel(applic
                     .update("avatarUrl", base64)
                     .await()
                 
+                SellerActivity.log(currentUser.uid, "Cập nhật ảnh đại diện", "Đã tải lên ảnh đại diện mới của shop", "UPDATE_AVATAR")
+
                 uiState.value = uiState.value.copy(
                     avatarUrl = base64,
                     updateMessage = "✅ Đã cập nhật ảnh đại diện!"
@@ -180,6 +196,8 @@ class SellerProfileViewModel(application: Application) : AndroidViewModel(applic
                     .update("avatarUrl", "")
                     .await()
                 
+                SellerActivity.log(currentUser.uid, "Xóa ảnh đại diện", "Đã xóa ảnh đại diện của shop", "REMOVE_AVATAR")
+
                 uiState.value = uiState.value.copy(
                     avatarUrl = "",
                     updateMessage = "Đã xóa ảnh đại diện"

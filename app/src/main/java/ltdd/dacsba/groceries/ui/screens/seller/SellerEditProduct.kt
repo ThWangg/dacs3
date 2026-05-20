@@ -35,12 +35,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import ltdd.dacsba.groceries.data.model.Category
 import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.ui.components.AppDropdown
 import ltdd.dacsba.groceries.ui.components.AppTextField
+import ltdd.dacsba.groceries.ui.components.ImagePickerButton
+import ltdd.dacsba.groceries.data.repository.ImageUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun SellerEditProductScreen(
@@ -81,6 +89,10 @@ fun EditProductContent(
     onBack: () -> Unit,
     onSaveClick: (Product) -> Unit
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isImageConverting by remember { mutableStateOf(false) }
+
     var name by remember { mutableStateOf(product.name) }
     var description by remember { mutableStateOf(product.description) }
     var price by remember { mutableStateOf(product.price.toString()) }
@@ -110,10 +122,10 @@ fun EditProductContent(
                 }
             )
         }
-    ) { padding ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(padding)
+                .padding(paddingValues)
                 .padding(16.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
@@ -174,11 +186,30 @@ fun EditProductContent(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            AppTextField(
-                value = imageUrl,
-                onValueChange = { imageUrl = it },
-                label = "Ảnh sản phẩm",
-                modifier = Modifier.fillMaxWidth()
+            Text("Ảnh sản phẩm", fontSize = 13.sp, color = Color.Gray)
+            ImagePickerButton(
+                currentImageUrl = imageUrl,
+                isUploading = isImageConverting,
+                onImagePicked = { uri ->
+                    coroutineScope.launch {
+                        isImageConverting = true
+                        val base64 = try {
+                            withContext(Dispatchers.IO) {
+                                ImageUtils.uriToBase64(context, uri)
+                            }
+                        } catch (e: Exception) { null }
+                        if (base64 != null) {
+                            imageUrl = base64
+                        } else {
+                            Toast.makeText(context, "Lỗi xử lý ảnh", Toast.LENGTH_SHORT).show()
+                        }
+                        isImageConverting = false
+                    }
+                },
+                onRemoveImage = { imageUrl = "" },
+                label = "Bấm để chọn ảnh từ thư viện",
+                previewHeight = 160.dp,
+                accentColor = Color(0xFF7CB342) // SellerGreen
             )
 
             Spacer(Modifier.height(16.dp))
@@ -197,7 +228,7 @@ fun EditProductContent(
                     onSaveClick(updated)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                enabled = !isLoading && !isImageConverting
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))

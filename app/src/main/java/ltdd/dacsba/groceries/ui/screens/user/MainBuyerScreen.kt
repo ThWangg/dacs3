@@ -30,12 +30,36 @@ object BuyerRoutes {
 @Composable
 fun MainBuyerScreen(
     parentNavController: NavController,
-    onLogout: () -> Unit,
+    onLogout: (String?) -> Unit,
     onSwitchToSeller: () -> Unit
 ) {
     val navController = rememberNavController()
     val buyerViewModel: BuyerHomeViewModel = viewModel()
     val cartViewModel: BuyerCartViewModel = viewModel()
+    val orderViewModel: BuyerOrderViewModel = viewModel()
+
+    val auth = androidx.compose.runtime.remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+    val db = androidx.compose.runtime.remember { com.google.firebase.firestore.FirebaseFirestore.getInstance() }
+
+    androidx.compose.runtime.DisposableEffect(auth.currentUser) {
+        val uid = auth.currentUser?.uid ?: return@DisposableEffect onDispose {}
+        val listener = db.collection(ltdd.dacsba.groceries.data.constant.AppConstant.COLLECTION_USERS).document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                if (snapshot != null && snapshot.exists()) {
+                    val isDeactivated = snapshot.getBoolean("isDeactivated") ?: false
+                    if (isDeactivated) {
+                        auth.signOut()
+                        onLogout("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.")
+                    }
+                }
+            }
+
+        onDispose {
+            listener.remove()
+        }
+    }
+
 
     val bottomNavItems = listOf(
         BottomNavItem("Trang chủ", BuyerRoutes.HOME, Icons.Default.Home),
@@ -68,16 +92,17 @@ fun MainBuyerScreen(
                 BuyerCheckoutScreen(navController = navController, viewModel = cartViewModel)
             }
             composable(BuyerRoutes.ORDERS) {
-                BuyerOrderScreen(navController = navController)
+                BuyerOrderScreen(navController = navController, viewModel = orderViewModel)
             }
             composable(BuyerRoutes.PROFILE) {
                 BuyerProfileScreen(
                     navController = navController,
                     viewModel = buyerViewModel,
-                    onLogout = onLogout,
+                    onLogout = { onLogout(null) },
                     onSwitchToSeller = onSwitchToSeller
                 )
             }
         }
     }
+
 }

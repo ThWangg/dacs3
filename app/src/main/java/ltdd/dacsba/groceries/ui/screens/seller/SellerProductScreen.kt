@@ -36,6 +36,10 @@ fun SellerProductScreen(
     val products by viewModel.products
     val isLoading by viewModel.isLoading
 
+    LaunchedEffect(Unit) {
+        viewModel.refreshData()
+    }
+
     SellerProductContent(
         products = products,
         isLoading = isLoading,
@@ -245,8 +249,9 @@ fun ProductItemRow(
                     fontSize = 15.sp,
                     maxLines = 1
                 )
+                val formattedPrice = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(product.price)
                 Text(
-                    text = "${product.price}đ / ${product.unit}",
+                    text = "${formattedPrice}đ / ${product.unit}",
                     color = Color(0xFF7CB342),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp

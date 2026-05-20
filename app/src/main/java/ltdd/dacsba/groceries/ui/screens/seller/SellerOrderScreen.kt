@@ -18,8 +18,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -28,12 +32,17 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 import ltdd.dacsba.groceries.data.model.Order
 import ltdd.dacsba.groceries.data.model.OrderItem
 import ltdd.dacsba.groceries.data.model.OrderStatus
@@ -58,17 +68,40 @@ fun SellerOrderScreen(
 ) {
     val orders by viewModel.orders
     val isLoading by viewModel.isLoading
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    SellerOrderContent(
-        orders = orders,
-        isLoading = isLoading
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        SellerOrderContent(
+            orders = orders,
+            isLoading = isLoading,
+            onUpdateStatus = { orderId, newStatus ->
+                viewModel.updateOrderStatus(
+                    orderId = orderId,
+                    newStatus = newStatus,
+                    onSuccess = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Cập nhật trạng thái thành công")
+                        }
+                    },
+                    onError = { err ->
+                        scope.launch { snackbarHostState.showSnackbar(err) }
+                    }
+                )
+            }
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
 }
 
 @Composable
 fun SellerOrderContent(
     orders: List<Order>,
-    isLoading: Boolean
+    isLoading: Boolean,
+    onUpdateStatus: (String, OrderStatus) -> Unit = { _, _ -> }
 ) {
     var selectedStatus by remember { mutableStateOf<OrderStatus?>(null) }
 
@@ -91,13 +124,11 @@ fun SellerOrderContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Text(
-                text = "My Orders",
+                text = "Đơn hàng",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold
             )
-
             Text(
                 text = "${filteredOrders.size} đơn",
                 fontSize = 14.sp,
@@ -120,7 +151,6 @@ fun SellerOrderContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-
         if (filteredOrders.isEmpty() && !isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -135,7 +165,7 @@ fun SellerOrderContent(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text="No order",
+                        text = "Không có đơn hàng",
                         color = Color.Gray
                     )
                 }
@@ -147,7 +177,7 @@ fun SellerOrderContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(filteredOrders) { order ->
-                    OrderItemCard(order = order)
+                    OrderItemCard(order = order, onUpdateStatus = onUpdateStatus)
                 }
             }
         }
@@ -159,11 +189,12 @@ fun OrderStatusFilterRow(
     selectedStatus: OrderStatus?,
     onStatusSelected: (OrderStatus?) -> Unit
 ) {
-    val statusList = OrderStatus.entries.toList()
+    val statusList = OrderStatus.entries.filter { it != OrderStatus.CONFIRMED }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
             .padding(horizontal = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -172,7 +203,7 @@ fun OrderStatusFilterRow(
         FilterChip(
             selected = selectedStatus == null,
             onClick = { onStatusSelected(null) },
-            label = { Text("All", fontSize = 12.sp) },
+            label = { Text("Tất cả", fontSize = 12.sp) },
             colors = FilterChipDefaults.filterChipColors(
                 selectedContainerColor = Color(0xFF7CB342),
                 selectedLabelColor = Color.White
@@ -194,7 +225,7 @@ fun OrderStatusFilterRow(
 }
 
 @Composable
-fun OrderItemCard(order: Order) {
+fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = { _, _ -> }) {
     val statusColor = when (order.status) {
         OrderStatus.PENDING -> Color(0xFFFBC02D)
         OrderStatus.CONFIRMED -> Color(0xFF1976D2)
@@ -315,6 +346,99 @@ fun OrderItemCard(order: Order) {
                     color = Color(0xFF7CB342)
                 )
             }
+
+            // Action buttons for status transition
+            val nextStatus = when (order.status) {
+                OrderStatus.PENDING -> OrderStatus.SHIPPING
+                OrderStatus.SHIPPING -> OrderStatus.DELIVERED
+                else -> null
+            }
+            val actionLabel = when (order.status) {
+                OrderStatus.PENDING -> "Xác nhận & Giao hàng"
+                OrderStatus.SHIPPING -> "Xác nhận đã giao"
+                else -> null
+            }
+            val actionIcon = when (order.status) {
+                OrderStatus.PENDING -> Icons.Default.LocalShipping
+                OrderStatus.SHIPPING -> Icons.Default.CheckCircle
+                else -> null
+            }
+            val actionColor = when (order.status) {
+                OrderStatus.PENDING -> Color(0xFF7CB342)
+                OrderStatus.SHIPPING -> Color(0xFF1976D2)
+                else -> null
+            }
+
+            if (nextStatus != null && actionLabel != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                if (order.status == OrderStatus.PENDING) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { onUpdateStatus(order.orderId, OrderStatus.CANCELLED) },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFD32F2F)
+                            )
+                        ) {
+                            Text(
+                                text = "Hủy đơn",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                        Button(
+                            onClick = { onUpdateStatus(order.orderId, nextStatus) },
+                            modifier = Modifier.weight(1.8f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = actionColor ?: Color(0xFF7CB342)
+                            )
+                        ) {
+                            if (actionIcon != null) {
+                                Icon(
+                                    imageVector = actionIcon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                            }
+                            Text(
+                                text = actionLabel,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = { onUpdateStatus(order.orderId, nextStatus) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = actionColor ?: Color(0xFF7CB342)
+                        )
+                    ) {
+                        if (actionIcon != null) {
+                            Icon(
+                                imageVector = actionIcon,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = actionLabel,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+
         }
     }
 }
