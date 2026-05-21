@@ -143,6 +143,24 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun updateUsername(newUsername: String) {
+        viewModelScope.launch {
+            val uid = auth.currentUser?.uid ?: return@launch
+            isLoading.value = true
+            try {
+                db.collection(AppConstant.COLLECTION_USERS)
+                    .document(uid)
+                    .update("username", newUsername)
+                    .await()
+                currentUser.value = currentUser.value?.copy(username = newUsername)
+                profileMessage.value = "✅ Đã cập nhật tên hiển thị!"
+            } catch (e: Exception) {
+                profileMessage.value = "❌ Lỗi: ${e.message}"
+            }
+            isLoading.value = false
+        }
+    }
+
     fun clearProfileMessage() { profileMessage.value = null }
 
     // ─── Seller Request ───────────────────────────────────────────────────────

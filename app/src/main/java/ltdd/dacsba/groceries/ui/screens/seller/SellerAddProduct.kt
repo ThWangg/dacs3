@@ -33,6 +33,8 @@ import ltdd.dacsba.groceries.data.model.Category
 import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.data.repository.ImageUtils
 import ltdd.dacsba.groceries.ui.components.ImagePickerButton
+import ltdd.dacsba.groceries.ui.components.TagSelectorSection
+import ltdd.dacsba.groceries.data.model.ProductTags
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,6 +74,8 @@ fun SellerAddProductScreen(
     
     var showCategoryMenu by remember { mutableStateOf(false) }
     var showUnitMenu by remember { mutableStateOf(false) }
+
+    var selectedTags by remember { mutableStateOf<List<String>>(emptyList()) }
 
     var nameError by remember { mutableStateOf(false) }
     var priceError by remember { mutableStateOf(false) }
@@ -138,6 +142,14 @@ fun SellerAddProductScreen(
                     }
                 }
             }
+
+            // Tags
+            TagSelectorSection(
+                categoryId = selectedCategory.categoryId,
+                selectedTags = selectedTags,
+                onTagsChanged = { selectedTags = it },
+                accentColor = SellerGreen
+            )
 
             // Giá + Đơn vị
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -230,6 +242,9 @@ fun SellerAddProductScreen(
                     if (nameError || priceError) return@Button
 
                     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                    val autoTags = ProductTags.generateAutoTags(selectedCategory.categoryId, name.trim())
+                    val finalTags = (selectedTags + autoTags).distinct().take(ProductTags.MAX_TAGS)
+
                     val newProduct = Product(
                         id = UUID.randomUUID().toString(),
                         name = name.trim(),
@@ -240,7 +255,8 @@ fun SellerAddProductScreen(
                         categoryId = selectedCategory.categoryId,
                         imageUrl = imageUrl,
                         sellerId = currentUserId,
-                        status = "PENDING"
+                        status = "PENDING",
+                        tags = finalTags
                     )
                     viewModel.addProduct(newProduct)
                 },

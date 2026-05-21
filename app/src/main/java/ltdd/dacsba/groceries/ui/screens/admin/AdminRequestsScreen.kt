@@ -8,11 +8,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
+import androidx.navigation.NavController
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +35,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun AdminRequestsScreen(viewModel: AdminViewModel) {
+fun AdminRequestsScreen(navController: NavController, viewModel: AdminViewModel) {
     val requests by viewModel.pendingRequests
     val products by viewModel.pendingProducts
     val isLoading by viewModel.isLoading
@@ -49,12 +51,21 @@ fun AdminRequestsScreen(viewModel: AdminViewModel) {
             .background(AdminBg)
     ) {
         // Header
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Brush.horizontalGradient(listOf(AdminGreen, AdminGreenLight)))
-                .padding(horizontal = 20.dp, vertical = 20.dp)
+                .padding(horizontal = 12.dp, vertical = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Quay lại",
+                    tint = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.width(4.dp))
             Column {
                 Text(
                     "Quản lý Phê duyệt",

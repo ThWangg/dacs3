@@ -37,14 +37,21 @@ fun AdminDashboardScreen(
     val products by viewModel.products
     val isLoading by viewModel.isLoading
 
+    val pendingCount = viewModel.pendingRequests.value.size + viewModel.pendingProducts.value.size
+
+    LaunchedEffect(Unit) {
+        viewModel.loadAll()
+        viewModel.loadPendingRequests()
+    }
+
     AdminDashboardContent(
         totalUsers = viewModel.totalUsers,
         totalProducts = viewModel.totalProducts,
         totalBuyers = viewModel.totalBuyers,
         totalSellers = viewModel.totalSellers,
-        pendingRequests = viewModel.pendingRequests.value.size,
+        pendingRequests = pendingCount,
         isLoading = isLoading,
-        onRefresh = { viewModel.loadAll(); viewModel.loadPendingRequests() }
+        onNotificationClick = { navController.navigate(AdminRoutes.REQUESTS) }
     )
 }
 
@@ -56,7 +63,7 @@ fun AdminDashboardContent(
     totalSellers: Int,
     pendingRequests: Int = 0,
     isLoading: Boolean,
-    onRefresh: () -> Unit
+    onNotificationClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -87,10 +94,27 @@ fun AdminDashboardContent(
                 )
             }
             IconButton(
-                onClick = onRefresh,
+                onClick = onNotificationClick,
                 modifier = Modifier.align(Alignment.CenterEnd)
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.White)
+                Box {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Thông báo",
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    if (pendingRequests > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(9.dp)
+                                .clip(CircleShape)
+                                .background(Color.Red)
+                                .align(Alignment.TopEnd)
+                                .offset(x = 1.dp, y = (-1).dp)
+                        )
+                    }
+                }
             }
         }
 
@@ -268,6 +292,6 @@ fun AdminDashboardPreview() {
         totalBuyers = 20,
         totalSellers = 4,
         isLoading = false,
-        onRefresh = {}
+        onNotificationClick = {}
     )
 }

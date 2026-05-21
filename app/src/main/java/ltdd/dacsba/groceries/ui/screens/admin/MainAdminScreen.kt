@@ -46,7 +46,6 @@ fun MainAdminScreen(
         BottomNavItem("Dashboard",  AdminRoutes.DASHBOARD, Icons.Default.Dashboard),
         BottomNavItem("Users",      AdminRoutes.USERS,     Icons.Default.People),
         BottomNavItem("Sản phẩm",   AdminRoutes.PRODUCTS,  Icons.Default.Inventory),
-        BottomNavItem("Thông báo",  AdminRoutes.REQUESTS,  Icons.Default.Notifications, badgeCount = pendingCount),
         BottomNavItem("Profile",    AdminRoutes.PROFILE,   Icons.Default.ManageAccounts),
     )
 
@@ -75,7 +74,7 @@ fun MainAdminScreen(
                 AdminProductsScreen(navController = navController, viewModel = adminViewModel)
             }
             composable(AdminRoutes.REQUESTS) {
-                AdminRequestsScreen(viewModel = adminViewModel)
+                AdminRequestsScreen(navController = navController, viewModel = adminViewModel)
             }
             composable(AdminRoutes.PROFILE) {
                 AdminProfileScreen(

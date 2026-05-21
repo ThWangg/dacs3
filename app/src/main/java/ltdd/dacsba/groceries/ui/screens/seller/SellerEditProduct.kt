@@ -43,6 +43,8 @@ import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.ui.components.AppDropdown
 import ltdd.dacsba.groceries.ui.components.AppTextField
 import ltdd.dacsba.groceries.ui.components.ImagePickerButton
+import ltdd.dacsba.groceries.ui.components.TagSelectorSection
+import ltdd.dacsba.groceries.data.model.ProductTags
 import ltdd.dacsba.groceries.data.repository.ImageUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -105,6 +107,8 @@ fun EditProductContent(
 
     val categoryNames = Category.defaultCategories.map { it.categoryName }
     val unitOptions = selectedCategory?.availableUnits ?: Category.allUnits
+
+    var selectedTags by remember { mutableStateOf(product.tags) }
 
     Scaffold(
         topBar = {
@@ -186,6 +190,13 @@ fun EditProductContent(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            TagSelectorSection(
+                categoryId = selectedCategory?.categoryId ?: "",
+                selectedTags = selectedTags,
+                onTagsChanged = { selectedTags = it },
+                accentColor = Color(0xFF7CB342) // SellerGreen
+            )
+
             Text("Ảnh sản phẩm", fontSize = 13.sp, color = Color.Gray)
             ImagePickerButton(
                 currentImageUrl = imageUrl,
@@ -216,14 +227,19 @@ fun EditProductContent(
 
             Button(
                 onClick = {
+                    val catId = selectedCategory?.categoryId ?: product.categoryId
+                    val autoTags = ProductTags.generateAutoTags(catId, name)
+                    val finalTags = (selectedTags + autoTags).distinct().take(ProductTags.MAX_TAGS)
+
                     val updated = product.copy(
                         name = name,
                         description = description,
                         price = price.toDoubleOrNull() ?: 0.0,
                         unit = selectedUnit,
                         stock = stock.toIntOrNull() ?: 0,
-                        categoryId = selectedCategory?.categoryId ?: product.categoryId,
-                        imageUrl = imageUrl
+                        categoryId = catId,
+                        imageUrl = imageUrl,
+                        tags = finalTags
                     )
                     onSaveClick(updated)
                 },

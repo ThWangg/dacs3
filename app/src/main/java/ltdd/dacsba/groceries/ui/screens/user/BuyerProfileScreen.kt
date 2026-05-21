@@ -48,6 +48,17 @@ fun BuyerProfileScreen(
     var showSellerSheet by remember { mutableStateOf(false) }
     var requestMessage by remember { mutableStateOf("") }
     var localAvatarUri by remember { mutableStateOf<Uri?>(null) }
+    var showEditProfileSheet by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var editUsername by remember { mutableStateOf("") }
+
+    val profileMessage by viewModel.profileMessage
+    LaunchedEffect(profileMessage) {
+        profileMessage?.let {
+            android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearProfileMessage()
+        }
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -145,6 +156,94 @@ fun BuyerProfileScreen(
                 }
             }
         }
+    }
+
+    if (showEditProfileSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showEditProfileSheet = false },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 40.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(40.dp).height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color(0xFFE0E0E0))
+                        .align(Alignment.CenterHorizontally)
+                )
+                Text("👤 Chỉnh sửa Profile", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                
+                OutlinedTextField(
+                    value = editUsername,
+                    onValueChange = { editUsername = it },
+                    label = { Text("Tên hiển thị") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange)
+                )
+                
+                Button(
+                    onClick = { 
+                        if (editUsername.isNotBlank()) {
+                            viewModel.updateUsername(editUsername)
+                            showEditProfileSheet = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentOrange)
+                ) {
+                    Text("Lưu thay đổi", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+                TextButton(onClick = { showEditProfileSheet = false }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Huỷ", color = Color.Gray)
+                }
+            }
+        }
+    }
+
+    if (showAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(20.dp),
+            icon = { Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFF1976D2), modifier = Modifier.size(36.dp)) },
+            title = { Text("Về ứng dụng", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Groceries App", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = AccentOrange)
+                    Text("Phiên bản 1.0.0", fontSize = 14.sp, color = Color.Gray)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Ứng dụng mua sắm hàng tiêu dùng, nông sản sạch trực tuyến với đầy đủ tính năng dành cho Buyer và Seller.",
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showAboutDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentOrange),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Đóng", color = Color.White)
+                }
+            }
+        )
     }
 
     Column(
@@ -304,6 +403,38 @@ fun BuyerProfileScreen(
 
         Spacer(Modifier.height(16.dp))
 
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            Column(modifier = Modifier.padding(8.dp)) {
+                ProfileMenuItem(
+                    icon = Icons.Default.Edit,
+                    iconColor = Color(0xFF4CAF50),
+                    bgColor = Color(0xFFE8F5E9),
+                    label = "Chỉnh sửa Profile",
+                    onClick = {
+                        editUsername = currentUser?.username ?: ""
+                        showEditProfileSheet = true
+                    }
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F0F0))
+                ProfileMenuItem(
+                    icon = Icons.Default.Info,
+                    iconColor = Color(0xFF1976D2),
+                    bgColor = Color(0xFFE3F2FD),
+                    label = "Về ứng dụng",
+                    onClick = {
+                        showAboutDialog = true
+                    }
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
         // Trạng thái yêu cầu Seller
         when (requestStatus) {
             "PENDING"  -> StatusBanner("⏳ Yêu cầu trở thành Seller đang chờ Admin xét duyệt...", Color(0xFFFFF3E0), Color(0xFFE65100))
@@ -371,5 +502,51 @@ fun BuyerProfileRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label
             Text(label, fontSize = 12.sp, color = Color.Gray)
             Text(value, fontSize = 15.sp, fontWeight = FontWeight.Medium)
         }
+    }
+}
+
+@Composable
+fun ProfileMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconColor: Color,
+    bgColor: Color,
+    label: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = bgColor,
+            modifier = Modifier.size(36.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            text = label,
+            modifier = Modifier.weight(1f),
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black
+        )
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowRight,
+            contentDescription = null,
+            tint = Color.LightGray,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }

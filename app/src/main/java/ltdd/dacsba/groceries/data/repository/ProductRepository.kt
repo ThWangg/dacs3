@@ -40,6 +40,25 @@ class ProductRepository {
         }
     }
 
+    suspend fun getProductsByTags(tags: List<String>): Result<List<Product>> {
+        return try {
+            if (tags.isEmpty()) return Result.success(emptyList())
+            
+            // Firestore limit is 10 for IN and array-contains-any
+            val limitedTags = tags.take(10)
+            
+            val snapshot = productCollection
+                .whereArrayContainsAny("tags", limitedTags)
+                .get()
+                .await()
+
+            val products = snapshot.toObjects(Product::class.java).filter { it.status == "APPROVED" }
+            Result.success(products)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun searchProducts(query: String): Result<List<Product>> {
         return try {
             val snapshot = productCollection.get().await()

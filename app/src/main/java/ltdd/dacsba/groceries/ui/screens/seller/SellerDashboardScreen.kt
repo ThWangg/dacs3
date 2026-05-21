@@ -43,6 +43,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -90,6 +94,8 @@ fun SellerDashboardContent(
     onRefresh: () -> Unit,
     onNotificationClick: () -> Unit
 ) {
+    var visibleCount by remember { mutableStateOf(3) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -224,6 +230,10 @@ fun SellerDashboardContent(
                 }
             }
         } else {
+            val displayedActivities = remember(activities, visibleCount) {
+                activities.take(visibleCount)
+            }
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -233,7 +243,7 @@ fun SellerDashboardContent(
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 Column {
-                    activities.take(10).forEachIndexed { index, activity ->
+                    displayedActivities.forEachIndexed { index, activity ->
                         val icon = when (activity.type) {
                             "ADD_PRODUCT" -> Icons.Default.Add
                             "EDIT_PRODUCT" -> Icons.Default.Edit
@@ -310,12 +320,56 @@ fun SellerDashboardContent(
                                 }
                             }
                         )
-                        if (index < activities.size - 1 && index < 9) {
+                        if (index < displayedActivities.size - 1) {
                             androidx.compose.material3.HorizontalDivider(
                                 color = Color(0xFFEEEEEE),
                                 thickness = 0.5.dp,
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
+                        }
+                    }
+
+                    val showMoreVisible = activities.size > visibleCount
+                    val showLessVisible = visibleCount > 3
+
+                    if (showMoreVisible || showLessVisible) {
+                        androidx.compose.material3.HorizontalDivider(
+                            color = Color(0xFFEEEEEE),
+                            thickness = 0.5.dp,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp, horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (showMoreVisible) {
+                                TextButton(
+                                    onClick = { visibleCount += 3 }
+                                ) {
+                                    Text(
+                                        text = "Xem thêm",
+                                        color = Color(0xFF7CB342),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                            if (showMoreVisible && showLessVisible) {
+                                Spacer(modifier = Modifier.width(16.dp))
+                            }
+                            if (showLessVisible) {
+                                TextButton(
+                                    onClick = { visibleCount = 3 }
+                                ) {
+                                    Text(
+                                        text = "Thu gọn",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
                 }

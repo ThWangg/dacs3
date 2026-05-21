@@ -142,10 +142,6 @@ fun AdminProductsContent(
                     Text("${products.size} sản phẩm", fontSize = 13.sp, color = Color.White.copy(alpha = 0.8f))
                 }
                 Row(modifier = Modifier.align(Alignment.CenterEnd)) {
-                    // Seed data button
-                    IconButton(onClick = onSeedData) {
-                        Icon(Icons.Default.CloudUpload, contentDescription = "Seed data", tint = Color.White)
-                    }
                     IconButton(onClick = onRefresh) {
                         Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.White)
                     }
@@ -205,12 +201,7 @@ fun AdminProductsContent(
                         Icon(Icons.Default.Inventory, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(64.dp))
                         Spacer(Modifier.height(8.dp))
                         Text("Chưa có sản phẩm", color = Color.Gray, fontSize = 15.sp)
-                        Spacer(Modifier.height(6.dp))
-                        TextButton(onClick = onSeedData) {
-                            Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Thêm dữ liệu mẫu")
-                        }
+                        // No seed option for admin
                     }
                 }
             } else {
@@ -231,20 +222,7 @@ fun AdminProductsContent(
             }
         }
 
-        // FAB Thêm sản phẩm
-        FloatingActionButton(
-            onClick = { showAddSheet = true },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
-            containerColor = AdminGreen,
-            contentColor = Color.White,
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Row(modifier = Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text("Thêm SP", fontWeight = FontWeight.Bold)
-            }
-        }
+        // FAB removed so admin cannot add products
     }
 }
 
@@ -296,14 +274,7 @@ fun AdminProductCard(
                 }
             }
 
-            Column {
-                IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Edit, contentDescription = "Sửa", tint = Color(0xFF1976D2), modifier = Modifier.size(20.dp))
-                }
-                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Xóa", tint = Color.Red, modifier = Modifier.size(20.dp))
-                }
-            }
+            // Edit and Delete buttons removed to prevent admin from editing or deleting products
         }
     }
 }

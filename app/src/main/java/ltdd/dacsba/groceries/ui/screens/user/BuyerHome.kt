@@ -41,12 +41,17 @@ import ltdd.dacsba.groceries.ui.components.SmartImage
 import ltdd.dacsba.groceries.R
 import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.data.model.User
+import ltdd.dacsba.groceries.ui.screens.chat.ChatViewModel
 
 val DarkNavy = Color(0xFF1B2430)
 val AccentOrange = Color(0xFFFF7D4D)
 
 @Composable
-fun BuyerHomeScreen(viewModel: BuyerHomeViewModel = viewModel(), navController: NavController? = null) {
+fun BuyerHomeScreen(
+    viewModel: BuyerHomeViewModel = viewModel(), 
+    navController: NavController? = null,
+    parentNavController: NavController? = null
+) {
     val requestResult by viewModel.requestResult
     val profileMessage by viewModel.profileMessage
     val snackbarHostState = remember { SnackbarHostState() }
@@ -56,6 +61,7 @@ fun BuyerHomeScreen(viewModel: BuyerHomeViewModel = viewModel(), navController: 
     var selectedProduct by remember { mutableStateOf<ltdd.dacsba.groceries.data.model.Product?>(null) }
     val sellerNames by viewModel.sellerNames
     val scope = rememberCoroutineScope()
+    val chatViewModel: ChatViewModel = viewModel()
 
     LaunchedEffect(Unit) {
         viewModel.fetchProducts()
@@ -103,6 +109,16 @@ fun BuyerHomeScreen(viewModel: BuyerHomeViewModel = viewModel(), navController: 
                             scope.launch { snackbarHostState.showSnackbar(err) }
                         }
                     )
+                }
+            },
+            onChatWithSeller = { sellerId ->
+                chatViewModel.getOrCreateChatRoom(sellerId) { roomId ->
+                    if (roomId != null) {
+                        selectedProduct = null
+                        parentNavController?.navigate("chat_detail/$roomId/$sellerId") ?: navController?.navigate("chat_detail/$roomId/$sellerId")
+                    } else {
+                        scope.launch { snackbarHostState.showSnackbar("Không thể tạo phòng chat") }
+                    }
                 }
             }
         )
@@ -464,7 +480,8 @@ fun ProductDetailSheet(
     sellerName: String = "",
     onDismiss: () -> Unit,
     onAddToCart: (Int) -> Unit,
-    onBuyNow: (Int) -> Unit
+    onBuyNow: (Int) -> Unit,
+    onChatWithSeller: (String) -> Unit
 ) {
     var quantity by remember { mutableStateOf(1) }
     val formattedPrice = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(product.price)
@@ -513,7 +530,10 @@ fun ProductDetailSheet(
                     Spacer(modifier = Modifier.height(4.dp))
                     // Tên shop
                     if (sellerName.isNotBlank()) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Store,
                                 contentDescription = null,
@@ -522,6 +542,18 @@ fun ProductDetailSheet(
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(text = sellerName, fontSize = 13.sp, color = Color(0xFF9E9E9E))
+                            Spacer(Modifier.weight(1f))
+                            IconButton(
+                                onClick = { onChatWithSeller(product.sellerId) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_messenger),
+                                    contentDescription = "Nhắn tin",
+                                    tint = Color.Unspecified,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                     }

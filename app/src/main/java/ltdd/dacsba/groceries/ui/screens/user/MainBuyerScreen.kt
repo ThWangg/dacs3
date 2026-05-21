@@ -83,7 +83,11 @@ fun MainBuyerScreen(
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(BuyerRoutes.HOME) {
-                BuyerHomeScreen(viewModel = buyerViewModel, navController = navController)
+                BuyerHomeScreen(
+                    viewModel = buyerViewModel, 
+                    navController = navController,
+                    parentNavController = parentNavController
+                )
             }
             composable(BuyerRoutes.CART) {
                 BuyerCartScreen(navController = navController, viewModel = cartViewModel)
