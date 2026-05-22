@@ -221,7 +221,7 @@ fun AdminDashboardContent(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    "Thông tin hệ thôn",
+                    "Thông tin hệ thống",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )

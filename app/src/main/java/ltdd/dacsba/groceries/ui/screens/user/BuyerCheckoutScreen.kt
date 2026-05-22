@@ -148,15 +148,12 @@ fun BuyerCheckoutScreen(
                             viewModel.placeOrder(
                                 shippingAddress = address,
                                 note = note,
-                                onSuccess = {
-                                    // Navigate immediately, không chờ snackbar
-                                    navController.navigate(BuyerRoutes.ORDERS) {
+                                onSuccess = { orderId, totalAmount, sellerId ->
+                                    navController.navigate(
+                                        "payment_qr_screen/$orderId/$totalAmount/$sellerId"
+                                    ) {
                                         popUpTo(BuyerRoutes.HOME) { inclusive = false }
                                         launchSingleTop = true
-                                    }
-                                    // Snackbar riêng, không chặn navigation
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("Đặt hàng thành công!")
                                     }
                                 },
                                 onError = { err ->

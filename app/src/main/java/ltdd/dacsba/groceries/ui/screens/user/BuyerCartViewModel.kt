@@ -74,7 +74,7 @@ class BuyerCartViewModel : ViewModel() {
     fun placeOrder(
         shippingAddress: String,
         note: String,
-        onSuccess: () -> Unit,
+        onSuccess: (orderId: String, totalAmount: Long, sellerId: String) -> Unit,
         onError: (String) -> Unit
     ) {
         val userId = auth.currentUser?.uid
@@ -137,12 +137,19 @@ class BuyerCartViewModel : ViewModel() {
                 }
 
                 if (successCount > 0) {
+                    // Tính tổng tiền cho các sản phẩm đã chọn
+                    val totalAmount = selectedItems.sumOf { it.price * it.quantity }.toLong()
+                    // Sinh orderId độc lập (dùng để navigate sang màn hình QR)
+                    val generatedOrderId = java.util.UUID.randomUUID().toString()
+                    // Lấy sellerId đầu tiên để hiển thị thông tin tài khoản
+                    val firstSellerId = itemsBySeller.keys.first()
+
                     for (item in selectedItems) {
                         cartRepository.removeFromCart(userId, item.productId)
                     }
                     selectedItemIds.value = emptySet()
                     loadCart()
-                    onSuccess()
+                    onSuccess(generatedOrderId, totalAmount, firstSellerId)
                 } else {
                     onError(firstErrorMessage ?: "Không thể đặt hàng, vui lòng thử lại.")
                 }

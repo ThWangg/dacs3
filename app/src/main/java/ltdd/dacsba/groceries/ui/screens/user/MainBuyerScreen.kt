@@ -25,6 +25,7 @@ object BuyerRoutes {
     const val ORDERS = "buyer_orders"
     const val PROFILE = "buyer_profile"
     const val CHECKOUT = "buyer_checkout"
+    const val PAYMENT_QR = "payment_qr_screen"
 }
 
 @Composable
@@ -104,6 +105,31 @@ fun MainBuyerScreen(
                     viewModel = buyerViewModel,
                     onLogout = { onLogout(null) },
                     onSwitchToSeller = onSwitchToSeller
+                )
+            }
+            // Màn hình thanh toán QR – phải nằm trong nested NavHost của Buyer
+            composable(
+                route = "${BuyerRoutes.PAYMENT_QR}/{orderId}/{amount}/{sellerId}",
+                arguments = listOf(
+                    androidx.navigation.navArgument("orderId") {
+                        type = androidx.navigation.NavType.StringType
+                    },
+                    androidx.navigation.navArgument("amount") {
+                        type = androidx.navigation.NavType.LongType
+                    },
+                    androidx.navigation.navArgument("sellerId") {
+                        type = androidx.navigation.NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getString("orderId") ?: return@composable
+                val amount = backStackEntry.arguments?.getLong("amount") ?: 0L
+                val sellerId = backStackEntry.arguments?.getString("sellerId") ?: ""
+                PaymentQrScreen(
+                    orderId = orderId,
+                    amount = amount,
+                    sellerId = sellerId,
+                    navController = navController
                 )
             }
         }
