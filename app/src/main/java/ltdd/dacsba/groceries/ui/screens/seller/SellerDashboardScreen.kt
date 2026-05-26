@@ -147,7 +147,7 @@ fun SellerDashboardContent(
                     .height(200.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF7CB342))
+                CircularProgressIndicator(color = SellerGreen)
             }
         } else {
             //hang 1
@@ -351,7 +351,7 @@ fun SellerDashboardContent(
                                 ) {
                                     Text(
                                         text = "Xem thêm",
-                                        color = Color(0xFF7CB342),
+                                        color = SellerGreen,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }

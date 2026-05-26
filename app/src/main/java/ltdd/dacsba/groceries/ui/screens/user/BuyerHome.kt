@@ -47,7 +47,7 @@ import ltdd.dacsba.groceries.data.model.User
 import ltdd.dacsba.groceries.ui.screens.chat.ChatViewModel
 
 val DarkNavy = Color(0xFF1B2430)
-val AccentOrange = Color(0xFFFF7D4D)
+val AccentOrange = Color(0xFF787FF6)
 
 @Composable
 fun BuyerHomeScreen(

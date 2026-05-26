@@ -46,7 +46,7 @@ fun AppDropdown(
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
-                focusedIndicatorColor = Color(0xFF7CB342),
+                focusedIndicatorColor = Color(0xFF787FF6),
                 unfocusedIndicatorColor = Color.Black
             )
         )

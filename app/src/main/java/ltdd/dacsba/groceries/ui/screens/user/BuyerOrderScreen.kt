@@ -85,7 +85,7 @@ fun BuyerOrderScreen(
                     .fillMaxWidth()
                     .background(
                         Brush.horizontalGradient(
-                            listOf(Color(0xFFFF6B35), Color(0xFFFF8E53))
+                            listOf(Color(0xFF787FF6), Color(0xFF1CA7EC), Color(0xFF1F2F98))
                         )
                     )
                     .statusBarsPadding()

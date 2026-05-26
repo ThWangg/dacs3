@@ -24,8 +24,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
-val AdminGreen = Color(0xFF2E7D32)
-val AdminGreenLight = Color(0xFF7CB342)
+val AdminGreen = Color(0xFF1F2F98)
+val AdminGreenLight = Color(0xFF1CA7EC)
 val AdminBg = Color(0xFFF4F6F8)
 
 @Composable
@@ -226,7 +226,7 @@ fun AdminDashboardContent(
                     fontSize = 16.sp
                 )
                 Spacer(Modifier.height(12.dp))
-                AdminInfoRow(Icons.Default.CheckCircle, "Trạng thái hệ thống", "Hoạt động", Color(0xFF2E7D32))
+                AdminInfoRow(Icons.Default.CheckCircle, "Trạng thái hệ thống", "Hoạt động", AdminGreen)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFF0F0F0))
                 AdminInfoRow(Icons.Default.Star, "Phiên bản ứng dụng", "v1.0.0", Color(0xFFE65100))
                 HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFF0F0F0))

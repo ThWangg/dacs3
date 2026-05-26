@@ -22,7 +22,7 @@ fun TagSelectorSection(
     selectedTags: List<String>,
     onTagsChanged: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
-    accentColor: Color = Color(0xFF7CB342) // SellerGreen by default
+    accentColor: Color = Color(0xFF787FF6) // BrandPrimary by default
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var customTag by remember { mutableStateOf("") }

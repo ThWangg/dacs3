@@ -36,8 +36,8 @@ import coil.request.ImageRequest
 import ltdd.dacsba.groceries.ui.components.AppTextField
 import ltdd.dacsba.groceries.ui.components.SmartImage
 
-val SellerGreen = Color(0xFF7CB342)
-val SellerGreenLight = Color(0xFFAED581)
+val SellerGreen = Color(0xFF1CA7EC)
+val SellerGreenLight = Color(0xFF787FF6)
 val SellerBg = Color(0xFFFBFBFB)
 
 @OptIn(ExperimentalMaterial3Api::class)

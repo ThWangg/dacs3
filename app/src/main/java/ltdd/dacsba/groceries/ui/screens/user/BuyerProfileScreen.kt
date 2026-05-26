@@ -255,7 +255,7 @@ fun BuyerProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color(0xFFFF7D4D), Color(0xFFFF5722))))
+                .background(Brush.horizontalGradient(listOf(Color(0xFF787FF6), Color(0xFF1CA7EC), Color(0xFF1F2F98))))
                 .padding(top = 40.dp, bottom = 32.dp),
             contentAlignment = Alignment.Center
         ) {

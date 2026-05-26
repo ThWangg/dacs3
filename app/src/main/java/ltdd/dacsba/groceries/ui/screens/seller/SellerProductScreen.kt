@@ -101,7 +101,7 @@ fun SellerProductContent(
                 onClick = onAddClick,
                 colors = ButtonDefaults
                     .buttonColors(
-                        containerColor = Color(0xFF7CB342)
+                        containerColor = SellerGreen
                     ),
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
@@ -119,11 +119,11 @@ fun SellerProductContent(
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color.White,
-            contentColor = Color(0xFF7CB342),
+            contentColor = SellerGreen,
             indicator = { tabPositions ->
                 TabRowDefaults.SecondaryIndicator(
                     Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                    color = Color(0xFF7CB342)
+                    color = SellerGreen
                 )
             }
         ) {
@@ -135,7 +135,7 @@ fun SellerProductContent(
                         Text(
                             title,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                            color = if (selectedTab == index) Color(0xFF7CB342) else Color.Gray
+                            color = if (selectedTab == index) SellerGreen else Color.Gray
                         )
                     }
                 )
@@ -152,8 +152,8 @@ fun SellerProductContent(
                     onClick = { filterCategory = null },
                     label = { Text("Tất cả") },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF7CB342).copy(alpha = 0.2f),
-                        selectedLabelColor = Color(0xFF7CB342)
+                        selectedContainerColor = SellerGreen.copy(alpha = 0.2f),
+                        selectedLabelColor = SellerGreen
                     )
                 )
             }
@@ -164,8 +164,8 @@ fun SellerProductContent(
                     onClick = { filterCategory = cat },
                     label = { Text("${cat.iconEmoji} ${cat.categoryName}") },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF7CB342).copy(alpha = 0.2f),
-                        selectedLabelColor = Color(0xFF7CB342)
+                        selectedContainerColor = SellerGreen.copy(alpha = 0.2f),
+                        selectedLabelColor = SellerGreen
                     )
                 )
             }
@@ -174,7 +174,7 @@ fun SellerProductContent(
         if (isLoading) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF7CB342)
+                color = SellerGreen
             )
         }
 
@@ -252,14 +252,14 @@ fun ProductItemRow(
                 val formattedPrice = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(product.price)
                 Text(
                     text = "${formattedPrice}đ / ${product.unit}",
-                    color = Color(0xFF7CB342),
+                    color = SellerGreen,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp
                 )
                 Spacer(Modifier.height(2.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFE8F5E9)) {
-                        Text("Kho: ${product.stock}", fontSize = 10.sp, color = Color(0xFF7CB342), modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                        Text("Kho: ${product.stock}", fontSize = 10.sp, color = SellerGreen, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
                     }
                     val statusColor = when(product.status) {
                         "APPROVED" -> Color(0xFF1565C0)

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -91,7 +93,7 @@ fun LoginScreen( //logic
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF7CB342))
+                CircularProgressIndicator(color = Color(0xFF787FF6))
             }
         }
     }
@@ -146,18 +148,18 @@ fun LoginContent( // UI để preview
                 Column(
                     modifier = Modifier
                         .padding(start = 12.dp)
-                        .size(height = 70.dp, width = 70.dp)
+                        .size(height = 70.dp, width = 120.dp) // adjusted width for title spacing
                 ) {
                     HorizontalDivider(
                         modifier = Modifier.width(60.dp),
                         thickness = 4.dp,
-                        color = Color(0xFFBB86FC)
+                        color = Color(0xFF787FF6) // BrandPrimary
                     )
                     Text(
                         text = "TAUT Shop",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE26161)
+                        color = Color(0xFF1F2F98) // BrandTertiary
                     )
                 }
             }
@@ -206,26 +208,38 @@ fun LoginContent( // UI để preview
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            //login
+            //login with premium brand gradient
             Button(
                 onClick = onLoginClick,
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF7CB342)
+                    containerColor = Color.Transparent
                 ),
+                contentPadding = PaddingValues(),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .width(180.dp)
                     .height(50.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFF787FF6), Color(0xFF1CA7EC), Color(0xFF1F2F98))
+                        ),
+                        shape = RoundedCornerShape(25.dp)
                     )
-                } else {
-                    Text(text = "Đăng nhập", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(text = "Đăng nhập", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 
@@ -241,7 +255,7 @@ fun LoginContent( // UI để preview
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Đăng kí",
-                    color = Color(0xFF7CB342),
+                    color = Color(0xFF787FF6), // BrandPrimary
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     modifier = Modifier.clickable { onSignUpClick() }

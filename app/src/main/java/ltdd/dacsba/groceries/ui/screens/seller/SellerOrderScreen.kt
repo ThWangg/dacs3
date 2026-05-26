@@ -139,7 +139,7 @@ fun SellerOrderContent(
         if (isLoading) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF7CB342)
+                color = SellerGreen
             )
         }
 
@@ -205,7 +205,7 @@ fun OrderStatusFilterRow(
             onClick = { onStatusSelected(null) },
             label = { Text("Tất cả", fontSize = 12.sp) },
             colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = Color(0xFF7CB342),
+                selectedContainerColor = SellerGreen,
                 selectedLabelColor = Color.White
             )
         )
@@ -216,7 +216,7 @@ fun OrderStatusFilterRow(
                 onClick = { onStatusSelected(status) },
                 label = { Text(status.displayName, fontSize = 12.sp) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFF7CB342),
+                    selectedContainerColor = SellerGreen,
                     selectedLabelColor = Color.White
                 )
             )
@@ -318,7 +318,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
                     Text(
                         text = formatCurrency(item.priceAtOrder * item.quantity),
                         fontSize = 13.sp,
-                        color = Color(0xFF7CB342),
+                        color = SellerGreen,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -343,7 +343,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
                     text = formatCurrency(order.totalAmount),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF7CB342)
+                    color = SellerGreen
                 )
             }
 
@@ -364,7 +364,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
                 else -> null
             }
             val actionColor = when (order.status) {
-                OrderStatus.PENDING -> Color(0xFF7CB342)
+                OrderStatus.PENDING -> SellerGreen
                 OrderStatus.SHIPPING -> Color(0xFF1976D2)
                 else -> null
             }
@@ -395,7 +395,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
                             modifier = Modifier.weight(1.8f),
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = actionColor ?: Color(0xFF7CB342)
+                                containerColor = actionColor ?: SellerGreen
                             )
                         ) {
                             if (actionIcon != null) {
@@ -403,7 +403,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
                                     imageVector = actionIcon,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp)
-                                )
+                               )
                                 Spacer(Modifier.width(6.dp))
                             }
                             Text(
@@ -419,7 +419,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = actionColor ?: Color(0xFF7CB342)
+                            containerColor = actionColor ?: SellerGreen
                         )
                     ) {
                         if (actionIcon != null) {

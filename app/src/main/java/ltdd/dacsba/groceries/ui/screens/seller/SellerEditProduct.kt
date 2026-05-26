@@ -194,7 +194,7 @@ fun EditProductContent(
                 categoryId = selectedCategory?.categoryId ?: "",
                 selectedTags = selectedTags,
                 onTagsChanged = { selectedTags = it },
-                accentColor = Color(0xFF7CB342) // SellerGreen
+                accentColor = SellerGreen
             )
 
             Text("Ảnh sản phẩm", fontSize = 13.sp, color = Color.Gray)
@@ -220,7 +220,7 @@ fun EditProductContent(
                 onRemoveImage = { imageUrl = "" },
                 label = "Bấm để chọn ảnh từ thư viện",
                 previewHeight = 160.dp,
-                accentColor = Color(0xFF7CB342) // SellerGreen
+                accentColor = SellerGreen
             )
 
             Spacer(Modifier.height(16.dp))

@@ -168,9 +168,9 @@ fun AdminUsersContent(
 @Composable
 fun UserRowCard(user: User, onClick: () -> Unit) {
     val roleColor = when (user.role) {
-        "ADMIN"  -> Color(0xFF7B1FA2)
-        "SELLER" -> Color(0xFF1565C0)
-        else     -> Color(0xFF2E7D32)
+        "ADMIN"  -> Color(0xFF1F2F98)
+        "SELLER" -> Color(0xFF1CA7EC)
+        else     -> Color(0xFF787FF6)
     }
     Card(
         onClick = onClick,
@@ -217,9 +217,9 @@ fun UserRowCard(user: User, onClick: () -> Unit) {
 @Composable
 fun UserAvatarCircle(user: User, size: Int = 46) {
     val roleColor = when (user.role) {
-        "ADMIN"  -> Color(0xFF7B1FA2)
-        "SELLER" -> Color(0xFF1565C0)
-        else     -> Color(0xFF2E7D32)
+        "ADMIN"  -> Color(0xFF1F2F98)
+        "SELLER" -> Color(0xFF1CA7EC)
+        else     -> Color(0xFF787FF6)
     }
     Box(
         modifier = Modifier.size(size.dp).clip(CircleShape),
@@ -268,9 +268,9 @@ fun UserDetailSheet(
     onUploadAvatar: (Uri, (String) -> Unit) -> Unit = { _, _ -> }
 ) {
     val roleColor = when (user.role) {
-        "ADMIN"  -> Color(0xFF7B1FA2)
-        "SELLER" -> Color(0xFF1565C0)
-        else     -> Color(0xFF2E7D32)
+        "ADMIN"  -> Color(0xFF1F2F98)
+        "SELLER" -> Color(0xFF1CA7EC)
+        else     -> Color(0xFF787FF6)
     }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAvatarSection by remember { mutableStateOf(false) }

@@ -74,7 +74,7 @@ fun MainSellerScreen(
             AppBottomBar(
                 navController = navController,
                 items = bottomNavItems,
-                selectedColor = Color(0xFF7CB342)
+                selectedColor = SellerGreen
             )
         }
     ) { paddingValues ->

@@ -45,7 +45,7 @@ fun ImagePickerButton(
     modifier: Modifier = Modifier,
     label: String = "Chọn ảnh",
     previewHeight: Dp = 160.dp,
-    accentColor: Color = Color(0xFF2E7D32),
+    accentColor: Color = Color(0xFF787FF6),
     isCircle: Boolean = false
 ) {
     val context = LocalContext.current
