@@ -17,12 +17,15 @@ import ltdd.dacsba.groceries.data.repository.SellerRequestRepository
 import ltdd.dacsba.groceries.data.repository.ImageUtils
 import ltdd.dacsba.groceries.data.model.CartItem
 import ltdd.dacsba.groceries.data.repository.CartRepository
+import ltdd.dacsba.groceries.data.repository.UserTagProfileRepository
+import ltdd.dacsba.groceries.data.repository.ContentBasedFilteringEngine
 
 class BuyerHomeViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
     private val productRepository = ProductRepository()
     private val sellerReqRepo = SellerRequestRepository()
     private val cartRepository = CartRepository()
+    private val tagProfileRepository = UserTagProfileRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
@@ -30,6 +33,11 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
     var sellerNames = mutableStateOf<Map<String, String>>(emptyMap())
     var isLoading = mutableStateOf(false)
     var message = mutableStateOf<String?>(null)
+
+    // ─── Recommendation ───────────────────────────────────────────────────────
+    var recommendedProducts = mutableStateOf<List<Product>>(emptyList())
+    var userTagProfile = mutableStateOf<List<String>>(emptyList())
+    var isLoadingRecommendations = mutableStateOf(false)
 
     // Seller request state
     var sellerRequestStatus = mutableStateOf<String?>(null)
@@ -45,6 +53,68 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
         fetchProducts()
         checkSellerRequestStatus()
         loadUserProfile()
+        loadRecommendations()
+    }
+
+    // ─── Recommendations ──────────────────────────────────────────────────────
+
+    fun loadRecommendations() {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            isLoadingRecommendations.value = true
+            try {
+                // 1. Lấy tập hợp nhãn sở thích của người dùng từ các đơn hàng đã giao (DELIVERED)
+                val preferredTags = tagProfileRepository.getUserPreferredTags(uid)
+                userTagProfile.value = preferredTags.toList()
+
+                if (preferredTags.isNotEmpty()) {
+                    // 2. Lấy tất cả sản phẩm và dùng Content-Based Filtering để xếp hạng độ tương đồng Cosine
+                    val result = productRepository.getAllProducts()
+                    result.onSuccess { allProducts ->
+                        val ranked = ContentBasedFilteringEngine.rankProducts(preferredTags, allProducts)
+                            .map { it.first }
+                            .filter { it.stock > 0 }
+                            .take(10)
+
+                        recommendedProducts.value = ranked
+
+                        // Load tên seller cho sản phẩm đề xuất
+                        val extraSellerIds = ranked.map { it.sellerId }.distinct()
+                            .filter { !sellerNames.value.containsKey(it) }
+                        if (extraSellerIds.isNotEmpty()) {
+                            loadSellerNamesForRecommendations(extraSellerIds)
+                        }
+                    }
+                    result.onFailure {
+                        recommendedProducts.value = emptyList()
+                    }
+                } else {
+                    // User chưa có lịch sử mua hàng -> không có gợi ý
+                    recommendedProducts.value = emptyList()
+                }
+            } catch (_: Exception) {
+                recommendedProducts.value = emptyList()
+            } finally {
+                // Đảm bảo luôn reset flag dù bất kỳ điều gì xảy ra
+                isLoadingRecommendations.value = false
+            }
+        }
+    }
+
+    private suspend fun loadSellerNamesForRecommendations(sellerIds: List<String>) {
+        try {
+            val nameMap = sellerNames.value.toMutableMap()
+            for (sellerId in sellerIds) {
+                if (sellerId.isBlank()) continue
+                val doc = db.collection(AppConstant.COLLECTION_USERS)
+                    .document(sellerId).get().await()
+                val name = doc.getString("shopName")
+                    ?: doc.getString("username")
+                    ?: "Shop"
+                nameMap[sellerId] = name
+            }
+            sellerNames.value = nameMap
+        } catch (_: Exception) {}
     }
 
     // ─── Products ─────────────────────────────────────────────────────────────

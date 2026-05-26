@@ -38,6 +38,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import ltdd.dacsba.groceries.ui.components.SmartImage
+import ltdd.dacsba.groceries.data.model.ProductTags
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import ltdd.dacsba.groceries.R
 import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.data.model.User
@@ -215,7 +218,7 @@ fun StatusBanner(text: String, bg: Color, textColor: Color) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun BuyerHomeBody(
     viewModel: BuyerHomeViewModel = viewModel(),
@@ -227,26 +230,33 @@ fun BuyerHomeBody(
     val products by viewModel.products
     val isLoading by viewModel.isLoading
     val sellerNames by viewModel.sellerNames
+    val recommendedProducts by viewModel.recommendedProducts
+    val userTagProfile by viewModel.userTagProfile
+    val isLoadingRecommendations by viewModel.isLoadingRecommendations
 
     var selectedCategory by remember { mutableStateOf<ltdd.dacsba.groceries.data.model.Category?>(null) }
     var sortOrder by remember { mutableStateOf(0) } // 0: None, 1: Low to High, 2: High to Low
 
     val approvedProducts = products.filter { it.status == "APPROVED" }
-    
+
     var filtered = approvedProducts.filter { p ->
         val matchesSearch = p.name.contains(searchQuery, ignoreCase = true)
         val matchesCategory = selectedCategory == null || p.categoryId == selectedCategory?.categoryId
         matchesSearch && matchesCategory
     }
-
     filtered = when (sortOrder) {
         1 -> filtered.sortedBy { it.price }
         2 -> filtered.sortedByDescending { it.price }
         else -> filtered
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(top = 8.dp)) {
-        // Search Bar
+    val tabs = listOf("🛍️ Sản phẩm", "✨ Dành cho bạn")
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(modifier = Modifier.fillMaxSize().padding(top = 4.dp)) {
+
+        // ── Search Bar ───────────────────────────────────────────────────────────
         androidx.compose.animation.AnimatedVisibility(visible = isSearchVisible) {
             OutlinedTextField(
                 value = searchQuery,
@@ -264,83 +274,216 @@ fun BuyerHomeBody(
             )
         }
 
-        // Filters and Sort Options in one compact row
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        // ── TabRow ─────────────────────────────────────────────────────────────
+        TabRow(
+            selectedTabIndex = pagerState.currentPage,
+            containerColor = Color.White,
+            contentColor = AccentOrange
         ) {
-            item {
-                FilterChip(
-                    selected = sortOrder == 1,
-                    onClick = { sortOrder = if (sortOrder == 1) 0 else 1 },
-                    label = { Text("Giá thấp ↑", fontSize = 12.sp) }
-                )
-            }
-            item {
-                FilterChip(
-                    selected = sortOrder == 2,
-                    onClick = { sortOrder = if (sortOrder == 2) 0 else 2 },
-                    label = { Text("Giá cao ↓", fontSize = 12.sp) }
-                )
-            }
-            item {
-                Spacer(Modifier.width(4.dp))
-                Box(modifier = Modifier.height(24.dp).width(1.dp).background(Color.LightGray))
-                Spacer(Modifier.width(4.dp))
-            }
-            item {
-                FilterChip(
-                    selected = selectedCategory == null,
-                    onClick = { selectedCategory = null },
-                    label = { Text("Tất cả", fontSize = 12.sp) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = AccentOrange.copy(alpha = 0.2f),
-                        selectedLabelColor = AccentOrange
-                    )
-                )
-            }
-            items(ltdd.dacsba.groceries.data.model.Category.defaultCategories) { cat ->
-                FilterChip(
-                    selected = selectedCategory?.categoryId == cat.categoryId,
-                    onClick = { selectedCategory = cat },
-                    label = { Text("${cat.iconEmoji} ${cat.categoryName}", fontSize = 12.sp) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = AccentOrange.copy(alpha = 0.2f),
-                        selectedLabelColor = AccentOrange
-                    )
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                    },
+                    text = {
+                        Text(
+                            text = title,
+                            fontSize = 14.sp,
+                            fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Normal,
+                            color = if (pagerState.currentPage == index) AccentOrange else Color.Gray
+                        )
+                    }
                 )
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        // ── Pages ──────────────────────────────────────────────────────────────
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                // ══ Tab 0: Sản phẩm ══════════════════════════════════════════════════
+                0 -> Column(modifier = Modifier.fillMaxSize()) {
+                    // Filter + Sort chips
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        contentPadding = PaddingValues(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = sortOrder == 1,
+                                onClick = { sortOrder = if (sortOrder == 1) 0 else 1 },
+                                label = { Text("Giá thấp ↑", fontSize = 12.sp) }
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = sortOrder == 2,
+                                onClick = { sortOrder = if (sortOrder == 2) 0 else 2 },
+                                label = { Text("Giá cao ↓", fontSize = 12.sp) }
+                            )
+                        }
+                        item {
+                            Spacer(Modifier.width(4.dp))
+                            Box(modifier = Modifier.height(24.dp).width(1.dp).background(Color.LightGray))
+                            Spacer(Modifier.width(4.dp))
+                        }
+                        item {
+                            FilterChip(
+                                selected = selectedCategory == null,
+                                onClick = { selectedCategory = null },
+                                label = { Text("Tất cả", fontSize = 12.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AccentOrange.copy(alpha = 0.2f),
+                                    selectedLabelColor = AccentOrange
+                                )
+                            )
+                        }
+                        items(ltdd.dacsba.groceries.data.model.Category.defaultCategories) { cat ->
+                            FilterChip(
+                                selected = selectedCategory?.categoryId == cat.categoryId,
+                                onClick = { selectedCategory = cat },
+                                label = { Text("${cat.iconEmoji} ${cat.categoryName}", fontSize = 12.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AccentOrange.copy(alpha = 0.2f),
+                                    selectedLabelColor = AccentOrange
+                                )
+                            )
+                        }
+                    }
 
-        Text(
-            text = "Sản phẩm (${filtered.size})", 
-            fontWeight = FontWeight.Bold, 
-            fontSize = 16.sp,
-            modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 4.dp)
-        )
-
-        if (isLoading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = AccentOrange)
-        } else if (filtered.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Không tìm thấy sản phẩm nào", color = Color.Gray)
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(8.dp),
-                modifier = Modifier.fillMaxWidth().weight(1f) // Chiếm 8 phần (toàn bộ khoảng trống còn lại)
-            ) {
-                items(filtered) { product ->
-                    ProductCard(
-                        product = product,
-                        sellerName = sellerNames[product.sellerId] ?: "Shop",
-                        onClick = { onProductClick(product) }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Sản phẩm (${filtered.size})",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 4.dp, top = 4.dp)
                     )
+
+                    if (isLoading) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = AccentOrange)
+                    } else if (filtered.isEmpty()) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Không tìm thấy sản phẩm nào", color = Color.Gray)
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(8.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(filtered) { product ->
+                                ProductCard(
+                                    product = product,
+                                    sellerName = sellerNames[product.sellerId] ?: "Shop",
+                                    onClick = { onProductClick(product) }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // ══ Tab 1: Dành cho bạn ═══════════════════════════════════════════
+                1 -> Column(modifier = Modifier.fillMaxSize()) {
+                    // Tag pills lý do gợi ý
+                    if (userTagProfile.isNotEmpty()) {
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = "Gợi ý dựa trên sở thích của bạn:",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            userTagProfile.take(6).forEach { tag ->
+                                Surface(
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = AccentOrange.copy(alpha = 0.12f)
+                                ) {
+                                    Text(
+                                        text = ProductTags.displayNameOf(tag),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = AccentOrange,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        HorizontalDivider(color = Color(0xFFF0F0F0))
+                    }
+
+                    when {
+                        isLoadingRecommendations -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    CircularProgressIndicator(color = AccentOrange)
+                                    Text(
+                                        "Đang tìm sản phẩm phù hợp...",
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                        recommendedProducts.isEmpty() -> {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text("🛒", fontSize = 40.sp)
+                                    Text(
+                                        "Chưa có gợi ý nào",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = Color(0xFF1B2430)
+                                    )
+                                    Text(
+                                        "Mua sắm thêm để chúng tôi hiểu sở thích của bạn 😊",
+                                        color = Color.Gray,
+                                        fontSize = 13.sp,
+                                        modifier = Modifier.padding(horizontal = 32.dp),
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                        else -> {
+                            Text(
+                                text = "${recommendedProducts.size} sản phẩm dành riêng cho bạn",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                            )
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                contentPadding = PaddingValues(8.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(recommendedProducts, key = { it.id }) { product ->
+                                    ProductCard(
+                                        product = product,
+                                        sellerName = sellerNames[product.sellerId] ?: "Shop",
+                                        onClick = { onProductClick(product) }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
