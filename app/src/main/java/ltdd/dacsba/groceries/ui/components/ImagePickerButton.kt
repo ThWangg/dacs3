@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.components
+﻿package ltdd.dacsba.groceries.ui.components
 
 import android.content.Intent
 import android.net.Uri
@@ -29,13 +29,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import ltdd.dacsba.groceries.ui.components.SmartImage
 
-/**
- * Nút chọn ảnh từ thư viện (Gallery).
- * Dùng GetContent() — launcher này tự cấp quyền đọc tạm thời cho URI được chọn,
- * không cần xin READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE riêng.
- * Gọi takePersistableUriPermission để giữ quyền đọc lâu dài, tránh lỗi
- * "Object does not exist at location" khi đọc bytes upload lên Firebase Storage.
- */
 @Composable
 fun ImagePickerButton(
     currentImageUrl: String,
@@ -50,32 +43,30 @@ fun ImagePickerButton(
 ) {
     val context = LocalContext.current
 
-    // Launcher mở Gallery — GetContent() tự cấp quyền đọc tạm thời
-    val galleryLauncher = rememberLauncherForActivityResult(
+val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // Cố lấy persistent read permission để URI không bị revoke khi đọc bytes sau này
+
             try {
                 context.contentResolver.takePersistableUriPermission(
                     it, Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
-            } catch (_: Exception) { /* Một số URI không hỗ trợ persistent, bỏ qua */ }
+            } catch (_: Exception) {  }
             onImagePicked(it)
         }
     }
 
-    // Mở Gallery trực tiếp — không cần xin quyền thủ công
-    fun openGallery() {
+fun openGallery() {
         galleryLauncher.launch("image/*")
     }
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (currentImageUrl.isNotBlank()) {
-            // ── Đã có ảnh: Hiển thị preview + nút đổi/xóa ──
+
             Box(contentAlignment = Alignment.TopEnd) {
                 if (isCircle) {
-                    // Preview hình tròn (dùng cho avatar)
+
                     Box(
                         modifier = Modifier
                             .size(previewHeight)
@@ -160,8 +151,7 @@ fun ImagePickerButton(
                     }
                 }
 
-
-                if (!isCircle) {
+if (!isCircle) {
                     IconButton(
                         onClick = onRemoveImage,
                         modifier = Modifier
@@ -214,8 +204,7 @@ fun ImagePickerButton(
             }
         }
 
-        // Loading indicator khi đang upload lên Firebase Storage
-        if (isUploading) {
+if (isUploading) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

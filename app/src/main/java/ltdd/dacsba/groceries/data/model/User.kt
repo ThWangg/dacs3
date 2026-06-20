@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.model
+﻿package ltdd.dacsba.groceries.data.model
 
 import com.google.firebase.firestore.PropertyName
 

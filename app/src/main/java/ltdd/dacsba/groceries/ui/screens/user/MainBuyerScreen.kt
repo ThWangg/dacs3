@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.user
+﻿package ltdd.dacsba.groceries.ui.screens.user
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -61,8 +61,7 @@ fun MainBuyerScreen(
         }
     }
 
-
-    val bottomNavItems = listOf(
+val bottomNavItems = listOf(
         BottomNavItem("Trang chủ", BuyerRoutes.HOME, Icons.Default.Home),
         BottomNavItem("Giỏ hàng", BuyerRoutes.CART, Icons.Default.ShoppingCart),
         BottomNavItem("Đơn hàng", BuyerRoutes.ORDERS, Icons.Default.List),
@@ -107,7 +106,7 @@ fun MainBuyerScreen(
                     onSwitchToSeller = onSwitchToSeller
                 )
             }
-            // Màn hình thanh toán QR – phải nằm trong nested NavHost của Buyer
+
             composable(
                 route = "${BuyerRoutes.PAYMENT_QR}/{orderId}/{amount}/{sellerId}",
                 arguments = listOf(

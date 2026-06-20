@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.seller
+﻿package ltdd.dacsba.groceries.ui.screens.seller
 
 import android.net.Uri
 import android.widget.Toast
@@ -68,7 +68,7 @@ fun SellerAddProductScreen(
     var price by remember { mutableStateOf("") }
     var stock by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var imageUrl by remember { mutableStateOf("") } // Will store Base64 or URL
+    var imageUrl by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(Category.defaultCategories.first()) }
     var selectedUnit by remember { mutableStateOf(selectedCategory.availableUnits.first()) }
     
@@ -105,7 +105,7 @@ fun SellerAddProductScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Tên sản phẩm
+
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; nameError = false },
@@ -117,8 +117,7 @@ fun SellerAddProductScreen(
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = SellerGreen)
             )
 
-            // Danh mục
-            Text("Danh mục *", fontSize = 13.sp, color = Color.Gray)
+Text("Danh mục *", fontSize = 13.sp, color = Color.Gray)
             ExposedDropdownMenuBox(expanded = showCategoryMenu, onExpandedChange = { showCategoryMenu = it }) {
                 OutlinedTextField(
                     value = "${selectedCategory.iconEmoji} ${selectedCategory.categoryName}",
@@ -143,16 +142,14 @@ fun SellerAddProductScreen(
                 }
             }
 
-            // Tags
-            TagSelectorSection(
+TagSelectorSection(
                 categoryId = selectedCategory.categoryId,
                 selectedTags = selectedTags,
                 onTagsChanged = { selectedTags = it },
                 accentColor = SellerGreen
             )
 
-            // Giá + Đơn vị
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = price,
                     onValueChange = { price = it; priceError = false },
@@ -183,8 +180,7 @@ fun SellerAddProductScreen(
                 }
             }
 
-            // Tồn kho
-            OutlinedTextField(
+OutlinedTextField(
                 value = stock,
                 onValueChange = { stock = it },
                 label = { Text("Tồn kho ban đầu") },
@@ -194,13 +190,12 @@ fun SellerAddProductScreen(
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = SellerGreen)
             )
 
-            // Ảnh sản phẩm
-            Text("Ảnh sản phẩm (Tùy chọn)", fontSize = 13.sp, color = Color.Gray)
+Text("Ảnh sản phẩm (Tùy chọn)", fontSize = 13.sp, color = Color.Gray)
             ImagePickerButton(
                 currentImageUrl = imageUrl,
                 isUploading = isImageConverting,
                 onImagePicked = { uri ->
-                    // Convert URI to Base64 in background
+
                     coroutineScope.launch {
                         isImageConverting = true
                         val base64 = try {
@@ -222,8 +217,7 @@ fun SellerAddProductScreen(
                 accentColor = SellerGreen
             )
 
-            // Mô tả
-            OutlinedTextField(
+OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Mô tả sản phẩm") },

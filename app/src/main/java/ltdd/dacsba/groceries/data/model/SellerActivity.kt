@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.model
+﻿package ltdd.dacsba.groceries.data.model
 
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -8,7 +8,7 @@ data class SellerActivity(
     val title: String = "",
     val message: String = "",
     val timestamp: Long = System.currentTimeMillis(),
-    val type: String = "" // "UPDATE_PROFILE", "UPDATE_AVATAR", "REMOVE_AVATAR", "ORDER_CONFIRM", "ORDER_SHIPPING", "ORDER_DELIVERED", "ORDER_CANCEL", "ADD_PRODUCT", "EDIT_PRODUCT"
+    val type: String = ""
 ) {
     companion object {
         fun log(sellerId: String, title: String, message: String, type: String) {

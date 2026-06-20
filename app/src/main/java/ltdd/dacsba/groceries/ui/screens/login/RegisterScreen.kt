@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.login
+﻿package ltdd.dacsba.groceries.ui.screens.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,8 +58,7 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-
-    val isLoading by authViewModel.isLoading
+val isLoading by authViewModel.isLoading
     val errorMessage by authViewModel.message
     val loginSuccess by authViewModel.loginSuccess
 
@@ -85,15 +84,14 @@ fun RegisterScreen(
         onPasswordChange = { password = it },
         onConfirmPasswordChange = { confirmPassword = it },
         onRegisterClick = { u, e, p, cp, r ->
-            //username, email, password, confirmpass, role
+
             if(p == cp){
                 val newUser = User(
                     username = u,
                     email = e,
                     role = r,
-                    // uid đc firebase tạo
-                    //createdAt
-                )
+
+)
 
                 authViewModel.register(newUser, p)
             }
@@ -163,13 +161,13 @@ fun RegisterContent(
                     HorizontalDivider(
                         modifier = Modifier.width(60.dp),
                         thickness = 4.dp,
-                        color = Color(0xFF787FF6) // BrandPrimary
+                        color = Color(0xFF787FF6)
                     )
                     Text(
                         text = "TAUT Shop",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2F98) // BrandTertiary
+                        color = Color(0xFF1F2F98)
                     )
                 }
             }
@@ -234,8 +232,7 @@ fun RegisterContent(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                //register with premium brand gradient
-                Button(
+Button(
                     onClick = {
                         onRegisterClick(username, email, password, confirmPassword, selectedRole)
                     },
@@ -276,8 +273,7 @@ fun RegisterContent(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-
-                Row(
+Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -286,7 +282,7 @@ fun RegisterContent(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Đăng nhập",
-                        color = Color(0xFF787FF6), // BrandPrimary
+                        color = Color(0xFF787FF6),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         modifier = Modifier.clickable { onSignInClick() }
@@ -296,49 +292,6 @@ fun RegisterContent(
         }
     }
 }
-
-//@Composable
-//fun RoleSelection(
-//    selectedRole: String,
-//    onRoleSelected: (String) -> Unit
-//){
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(top = 30.dp)
-//    ) {
-//        Text(text = "Register as:", fontWeight = FontWeight.Bold)
-//        Row(
-//            modifier = Modifier.fillMaxWidth(),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//
-//            //buyer
-//            RadioButton(
-//                selected = selectedRole == AppConstant.Roles.BUYER,
-//                onClick = { onRoleSelected(AppConstant.Roles.BUYER) }
-//            )
-//
-//            Text(
-//                text = "Buyer",
-//                modifier = Modifier.clickable { onRoleSelected(AppConstant.Roles.BUYER) }
-//            )
-//
-//            Spacer(modifier = Modifier.width(20.dp))
-//
-//            //seller
-//            RadioButton(
-//                selected = selectedRole == AppConstant.Roles.SELLER,
-//                onClick = { onRoleSelected(AppConstant.Roles.SELLER) }
-//            )
-//            Text(
-//                text = "Seller",
-//                modifier = Modifier.clickable { onRoleSelected(AppConstant.Roles.SELLER) }
-//            )
-//        }
-//    }
-//}
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

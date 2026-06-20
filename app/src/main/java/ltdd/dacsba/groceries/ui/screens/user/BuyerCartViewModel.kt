@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.user
+﻿package ltdd.dacsba.groceries.ui.screens.user
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -86,20 +86,18 @@ class BuyerCartViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
             try {
-                // Get buyer name
+
                 val userDoc = db.collection(AppConstant.COLLECTION_USERS).document(userId).get().await()
                 val buyerName = userDoc.getString("username") ?: "Khách hàng"
 
-                // Filter only selected items
-                val selectedItems = cartItems.value.filter { selectedItemIds.value.contains(it.productId) }
+val selectedItems = cartItems.value.filter { selectedItemIds.value.contains(it.productId) }
                 if (selectedItems.isEmpty()) {
                     onError("Chưa có sản phẩm nào được chọn")
                     isLoading.value = false
                     return@launch
                 }
 
-                // Group items by sellerId
-                val itemsBySeller = selectedItems.groupBy { it.sellerId }
+val itemsBySeller = selectedItems.groupBy { it.sellerId }
                 
                 var successCount = 0
                 var firstErrorMessage: String? = null
@@ -137,11 +135,11 @@ class BuyerCartViewModel : ViewModel() {
                 }
 
                 if (successCount > 0) {
-                    // Tính tổng tiền cho các sản phẩm đã chọn
+
                     val totalAmount = selectedItems.sumOf { it.price * it.quantity }.toLong()
-                    // Sinh orderId độc lập (dùng để navigate sang màn hình QR)
+
                     val generatedOrderId = java.util.UUID.randomUUID().toString()
-                    // Lấy sellerId đầu tiên để hiển thị thông tin tài khoản
+
                     val firstSellerId = itemsBySeller.keys.first()
 
                     for (item in selectedItems) {

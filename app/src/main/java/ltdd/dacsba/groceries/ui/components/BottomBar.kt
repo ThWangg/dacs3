@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.components
+﻿package ltdd.dacsba.groceries.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,7 @@ data class BottomNavItem(
     val title: String,
     val route: String,
     val icon: ImageVector,
-    val badgeCount: Int = 0  // số badge, 0 = không hiện
+    val badgeCount: Int = 0
 )
 
 @Composable
@@ -55,7 +55,7 @@ fun AppBottomBar(
                 icon = {
                     Box {
                         Icon(item.icon, contentDescription = item.title)
-                        // Badge đỏ nếu badgeCount > 0
+
                         if (item.badgeCount > 0) {
                             Box(
                                 modifier = Modifier

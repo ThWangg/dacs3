@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.user
+﻿package ltdd.dacsba.groceries.ui.screens.user
 
 import android.content.Intent
 import android.net.Uri
@@ -435,8 +435,7 @@ fun BuyerProfileScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        // Trạng thái yêu cầu Seller
-        when (requestStatus) {
+when (requestStatus) {
             "PENDING"  -> StatusBanner("⏳ Yêu cầu trở thành Seller đang chờ Admin xét duyệt...", Color(0xFFFFF3E0), Color(0xFFE65100))
             "APPROVED" -> StatusBanner("✅ Yêu cầu đã được duyệt! Đăng xuất rồi đăng nhập lại để dùng tài khoản Seller.", Color(0xFFE8F5E9), Color(0xFF2E7D32))
             "REJECTED" -> {

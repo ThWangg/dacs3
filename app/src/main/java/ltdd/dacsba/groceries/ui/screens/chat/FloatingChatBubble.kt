@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.chat
+﻿package ltdd.dacsba.groceries.ui.screens.chat
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -40,9 +40,8 @@ fun FloatingChatBubble(
     if (currentUser == null) return
 
     val chatRooms by chatViewModel.chatRooms.collectAsState()
-    
-    // Tính tổng số tin nhắn chưa đọc
-    val totalUnread = chatRooms.sumOf { it.unreadCounts[currentUser.uid] ?: 0 }
+
+val totalUnread = chatRooms.sumOf { it.unreadCounts[currentUser.uid] ?: 0 }
 
     val scope = rememberCoroutineScope()
     
@@ -65,7 +64,7 @@ fun FloatingChatBubble(
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDragEnd = {
-                            // Kiểm tra xem có bị kéo ra khỏi màn hình (vượt qua viền) không
+
                             val isOutOfBounds = offsetX.value > 0f || offsetY.value > 0f || 
                                                 offsetX.value < -screenWidth + 100f || 
                                                 offsetY.value < -screenHeight + 150f

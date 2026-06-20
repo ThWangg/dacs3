@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.admin
+﻿package ltdd.dacsba.groceries.ui.screens.admin
 
 import android.app.Application
 import android.content.Context
@@ -31,15 +31,13 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     val pendingRequests = mutableStateOf<List<SellerRequest>>(emptyList())
     val snackMessage = mutableStateOf<String?>(null)
 
-    // Profile
-    val adminEmail = mutableStateOf(repo.getCurrentAdminEmail())
+val adminEmail = mutableStateOf(repo.getCurrentAdminEmail())
     val adminUsername = mutableStateOf("Admin")
-    val adminAvatarUrl = mutableStateOf("")   // avatar của admin hiện tại
+    val adminAvatarUrl = mutableStateOf("")
     val isEditingProfile = mutableStateOf(false)
     val editUsername = mutableStateOf("Admin")
 
-    // Stats
-    val totalUsers get() = users.value.size
+val totalUsers get() = users.value.size
     val totalProducts get() = products.value.size
     val totalBuyers get() = users.value.count { it.role == "BUYER" }
     val totalSellers get() = users.value.count { it.role == "SELLER" }
@@ -71,13 +69,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ─── Image Upload (Base64 → Firestore, không cần Firebase Storage) ──────────
-
-    /**
-     * Nén ảnh → Base64 → trả về qua callback.
-     * Lưu trực tiếp vào Firestore, không cần Firebase Storage bucket.
-     */
-    fun uploadImage(uri: Uri, folder: String, onComplete: (String) -> Unit) {
+fun uploadImage(uri: Uri, folder: String, onComplete: (String) -> Unit) {
         viewModelScope.launch {
             isUploading.value = true
             try {
@@ -90,8 +82,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Upload avatar admin — nén ảnh → Base64 → lưu thẳng vào Firestore */
-    fun uploadAdminAvatar(uri: Uri) {
+fun uploadAdminAvatar(uri: Uri) {
         viewModelScope.launch {
             isUploading.value = true
             val uid = repo.getCurrentAdminUid()
@@ -113,8 +104,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Xóa avatar của admin */
-    fun removeAdminAvatar() {
+fun removeAdminAvatar() {
         viewModelScope.launch {
             val uid = repo.getCurrentAdminUid()
             if (uid.isBlank()) return@launch
@@ -125,9 +115,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ─── Users ────────────────────────────────────────────────────────────────
-
-    fun toggleUserDeactivate(user: User) {
+fun toggleUserDeactivate(user: User) {
         viewModelScope.launch {
             val newState = !user.isDeactivated
             repo.toggleUserDeactivate(user.uid, newState).onSuccess {
@@ -150,9 +138,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ─── Seller Requests ────────────────────────────────────────────────────────
-
-    fun loadPendingRequests() {
+fun loadPendingRequests() {
         viewModelScope.launch {
             isLoading.value = true
             launch { 
@@ -173,7 +159,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repo.approveSellerRequest(request).onSuccess {
                 pendingRequests.value = pendingRequests.value.filter { it.requestId != request.requestId }
-                // Cập nhật role trong danh sách users
+
                 users.value = users.value.map {
                     if (it.uid == request.uid) it.copy(role = "SELLER") else it
                 }
@@ -215,9 +201,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ─── Products ─────────────────────────────────────────────────────────────
-
-    fun addProduct(product: Product) {
+fun addProduct(product: Product) {
         viewModelScope.launch {
             isLoading.value = true
             repo.addProduct(product).onSuccess { newId ->
@@ -243,7 +227,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             isLoading.value = true
             val name = products.value.find { it.id == productId }?.name ?: ""
-            // Xóa ảnh trên Storage nếu là ảnh từ Firebase
+
             val imageUrl = products.value.find { it.id == productId }?.imageUrl ?: ""
             if (imageUrl.contains("firebasestorage")) {
                 storageRepo.deleteImageByUrl(imageUrl)
@@ -272,9 +256,7 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ─── Profile ──────────────────────────────────────────────────────────────
-
-    fun enterEditProfile() { editUsername.value = adminUsername.value; isEditingProfile.value = true }
+fun enterEditProfile() { editUsername.value = adminUsername.value; isEditingProfile.value = true }
     fun cancelEditProfile() { isEditingProfile.value = false }
 
     fun saveProfile() {

@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.seller
+﻿package ltdd.dacsba.groceries.ui.screens.seller
 
 import android.content.Intent
 import android.net.Uri
@@ -65,8 +65,7 @@ fun SellerProfileScreen(
         }
     }
 
-    // Gallery launcher
-    val galleryLauncher = rememberLauncherForActivityResult(
+val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
@@ -177,7 +176,7 @@ fun SellerProfileContent(
             .background(SellerBg)
             .verticalScroll(rememberScrollState())
     ) {
-        // Header gradient
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -186,7 +185,7 @@ fun SellerProfileContent(
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Avatar bấm được
+
                 Box(
                     modifier = Modifier
                         .size(90.dp)
@@ -220,7 +219,7 @@ fun SellerProfileContent(
                             fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = SellerGreen
                         )
                     }
-                    // Loading overlay
+
                     if (isUploading) {
                         Box(
                             modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.45f)),
@@ -231,8 +230,7 @@ fun SellerProfileContent(
                     }
                 }
 
-                // Camera icon badge
-                Box(
+Box(
                     modifier = Modifier
                         .offset(x = 30.dp, y = (-20).dp)
                         .size(28.dp)
@@ -255,8 +253,7 @@ fun SellerProfileContent(
 
         Spacer(Modifier.height((-16).dp))
 
-        // Info card
-        Card(
+Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -276,8 +273,7 @@ fun SellerProfileContent(
 
         Spacer(Modifier.height(16.dp))
 
-        // Settings card
-        Card(
+Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -306,8 +302,7 @@ fun SellerProfileContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Logout button
-        OutlinedButton(
+OutlinedButton(
             onClick = onLogoutClick,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp),
             shape = RoundedCornerShape(14.dp),
@@ -393,13 +388,12 @@ fun SellerProfileBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Handle bar
+
             Box(modifier = Modifier.width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFE0E0E0)))
 
             Text("👤 Hồ sơ Seller", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
 
-            // Avatar lớn — bấm để đổi
-            Box(contentAlignment = Alignment.BottomEnd) {
+Box(contentAlignment = Alignment.BottomEnd) {
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -439,7 +433,7 @@ fun SellerProfileBottomSheet(
                         }
                     }
                 }
-                // Camera badge
+
                 Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = SellerGreenLight, shadowElevation = 4.dp) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
@@ -453,8 +447,7 @@ fun SellerProfileBottomSheet(
                 Text(username, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 Text(email, color = Color.Gray, fontSize = 13.sp)
 
-                // 1. Đổi ảnh
-                if (localAvatarUri != null) {
+if (localAvatarUri != null) {
                     Button(
                         onClick = { onConfirmAvatar(localAvatarUri) },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -487,8 +480,7 @@ fun SellerProfileBottomSheet(
                     }
                 }
 
-                // 2. Chỉnh sửa thông tin
-                Button(
+Button(
                     onClick = onEnterEdit,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -499,8 +491,7 @@ fun SellerProfileBottomSheet(
                     Text("Chỉnh sửa thông tin", fontWeight = FontWeight.SemiBold)
                 }
 
-                // 3. Xóa ảnh (chỉ hiện nếu có avatar)
-                if (avatarUrl.isNotBlank() || localAvatarUri != null) {
+if (avatarUrl.isNotBlank() || localAvatarUri != null) {
                     OutlinedButton(
                         onClick = onRemoveAvatar,
                         modifier = Modifier.fillMaxWidth(),
@@ -515,7 +506,7 @@ fun SellerProfileBottomSheet(
                 }
 
             } else {
-                // Edit mode
+
                 Text("Chỉnh sửa Profile", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 AppTextField(value = username, onValueChange = onUsernameChange, label = "Tên hiển thị", modifier = Modifier.fillMaxWidth())
                 AppTextField(value = shopName, onValueChange = onShopNameChange, label = "Tên Shop", modifier = Modifier.fillMaxWidth())

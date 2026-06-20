@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.admin
+﻿package ltdd.dacsba.groceries.ui.screens.admin
 
 import android.content.Intent
 import android.net.Uri
@@ -61,17 +61,16 @@ fun AdminProfileScreen(
         snack?.let { snackbarHostState.showSnackbar(it); viewModel.clearSnack() }
     }
 
-    // Gallery launcher — GetContent() tự cấp quyền tạm thời, không cần xin quyền thủ công
-    val galleryLauncher = rememberLauncherForActivityResult(
+val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // Lấy persistent read permission để URI không bị revoke khi đọc bytes
+
             try {
                 context.contentResolver.takePersistableUriPermission(
                     it, Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
-            } catch (_: Exception) { /* Một số URI không hỗ trợ persistent, bỏ qua */ }
+            } catch (_: Exception) {  }
             localAvatarUri = it
         }
     }
@@ -80,8 +79,7 @@ fun AdminProfileScreen(
         galleryLauncher.launch("image/*")
     }
 
-    // Profile bottom sheet
-    if (showProfileSheet) {
+if (showProfileSheet) {
         AdminProfileBottomSheet(
             username = adminUsername,
             email = adminEmail,
@@ -98,7 +96,7 @@ fun AdminProfileScreen(
             onPickAvatar = { openGallery() },
             onConfirmAvatar = { uri ->
                 viewModel.uploadAdminAvatar(uri)
-                localAvatarUri = null // Reset after upload starts (or finishes)
+                localAvatarUri = null
             },
             onRemoveAvatar = {
                 localAvatarUri = null
@@ -109,8 +107,7 @@ fun AdminProfileScreen(
         )
     }
 
-    // Logout confirm dialog
-    if (showLogoutDialog) {
+if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             containerColor = Color.White,
@@ -163,7 +160,7 @@ fun AdminProfileContent(
             .background(AdminBg)
             .verticalScroll(rememberScrollState())
     ) {
-        // Header gradient
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -172,7 +169,7 @@ fun AdminProfileContent(
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Avatar bấm được
+
                 Box(
                     modifier = Modifier
                         .size(90.dp)
@@ -206,7 +203,7 @@ fun AdminProfileContent(
                             fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = AdminGreen
                         )
                     }
-                    // Loading overlay
+
                     if (isUploading) {
                         Box(
                             modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.45f)),
@@ -217,8 +214,7 @@ fun AdminProfileContent(
                     }
                 }
 
-                // Camera icon badge
-                Box(
+Box(
                     modifier = Modifier
                         .offset(x = 30.dp, y = (-20).dp)
                         .size(28.dp)
@@ -241,8 +237,7 @@ fun AdminProfileContent(
 
         Spacer(Modifier.height((-16).dp))
 
-        // Info card
-        Card(
+Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -262,8 +257,7 @@ fun AdminProfileContent(
 
         Spacer(Modifier.height(16.dp))
 
-        // Settings card
-        Card(
+Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -278,8 +272,7 @@ fun AdminProfileContent(
 
         Spacer(Modifier.height(16.dp))
 
-        // Logout button
-        OutlinedButton(
+OutlinedButton(
             onClick = onLogoutClick,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp),
             shape = RoundedCornerShape(14.dp),
@@ -362,13 +355,12 @@ fun AdminProfileBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Handle bar
+
             Box(modifier = Modifier.width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFE0E0E0)))
 
             Text("👤 Hồ sơ Admin", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
 
-            // Avatar lớn — bấm để đổi
-            Box(contentAlignment = Alignment.BottomEnd) {
+Box(contentAlignment = Alignment.BottomEnd) {
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -408,7 +400,7 @@ fun AdminProfileBottomSheet(
                         }
                     }
                 }
-                // Camera badge
+
                 Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = AdminGreenLight, shadowElevation = 4.dp) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
@@ -422,8 +414,7 @@ fun AdminProfileBottomSheet(
                 Text(username, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 Text(email, color = Color.Gray, fontSize = 13.sp)
 
-                // 1. Đổi ảnh
-                if (localAvatarUri != null) {
+if (localAvatarUri != null) {
                     Button(
                         onClick = { onConfirmAvatar(localAvatarUri) },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -456,8 +447,7 @@ fun AdminProfileBottomSheet(
                     }
                 }
 
-                // 2. Chỉnh sửa tên
-                Button(
+Button(
                     onClick = onEnterEdit,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -468,8 +458,7 @@ fun AdminProfileBottomSheet(
                     Text("Chỉnh sửa tên", fontWeight = FontWeight.SemiBold)
                 }
 
-                // 3. Xóa ảnh (chỉ hiện nếu có avatar)
-                if (avatarUrl.isNotBlank() || localAvatarUri != null) {
+if (avatarUrl.isNotBlank() || localAvatarUri != null) {
                     OutlinedButton(
                         onClick = onRemoveAvatar,
                         modifier = Modifier.fillMaxWidth(),
@@ -484,7 +473,7 @@ fun AdminProfileBottomSheet(
                 }
 
             } else {
-                // Edit mode
+
                 Text("Chỉnh sửa Thông tin", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 AppTextField(value = editUsername, onValueChange = onEditUsername, label = "Tên hiển thị", modifier = Modifier.fillMaxWidth())
                 Button(

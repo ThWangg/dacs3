@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.components
+﻿package ltdd.dacsba.groceries.ui.components
 
 import android.graphics.BitmapFactory
 import android.util.Base64
@@ -10,11 +10,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 
-/**
- * Composable hiển thị ảnh từ:
- * - URL (https://...) → dùng Coil bình thường
- * - Base64 (data:image/jpeg;base64,...) → decode thủ công rồi hiển thị
- */
 @Composable
 fun SmartImage(
     model: String,
@@ -23,7 +18,7 @@ fun SmartImage(
     contentScale: ContentScale = ContentScale.Crop
 ) {
     if (model.startsWith("data:image")) {
-        // Base64 image
+
         val bitmap = remember(model) {
             try {
                 val base64Part = model.substringAfter("base64,")
@@ -40,7 +35,7 @@ fun SmartImage(
             )
         }
     } else {
-        // URL bình thường
+
         AsyncImage(
             model = model,
             contentDescription = contentDescription,

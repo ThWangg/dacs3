@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.components
+﻿package ltdd.dacsba.groceries.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
@@ -28,8 +28,7 @@ fun AppTextField(
         label = { Text(label) },
         keyboardOptions = keyboardOptions,
 
-
-        visualTransformation = if (isPassword){
+visualTransformation = if (isPassword){
             PasswordVisualTransformation()
         } else VisualTransformation.None,
 

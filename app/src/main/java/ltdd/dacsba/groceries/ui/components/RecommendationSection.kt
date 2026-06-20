@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.components
+﻿package ltdd.dacsba.groceries.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import ltdd.dacsba.groceries.data.model.Product
 import ltdd.dacsba.groceries.data.model.ProductTags
 
-// ─── Màu accent chính (đồng bộ với BuyerHome) ────────────────────────────────
 private val RecommendOrange = Color(0xFFFF7D4D)
 private val RecommendGold   = Color(0xFFFFB347)
 
@@ -38,7 +37,7 @@ fun RecommendationSection(
     onProductClick: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Ẩn section nếu không loading mà cũng không có dữ liệu
+
     if (!isLoading && recommendedProducts.isEmpty()) return
 
     Column(
@@ -46,7 +45,7 @@ fun RecommendationSection(
             .fillMaxWidth()
             .padding(bottom = 8.dp)
     ) {
-        // ── Header ───────────────────────────────────────────────────────────
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -71,8 +70,7 @@ fun RecommendationSection(
             }
         }
 
-        // ── Tag pills (lý do đề xuất) ────────────────────────────────────────
-        if (userTagProfile.isNotEmpty()) {
+if (userTagProfile.isNotEmpty()) {
             val topTags = userTagProfile.take(3)
             Row(
                 modifier = Modifier
@@ -104,8 +102,7 @@ fun RecommendationSection(
             }
         }
 
-        // ── Carousel ─────────────────────────────────────────────────────────
-        if (isLoading) {
+if (isLoading) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -129,7 +126,6 @@ fun RecommendationSection(
     }
 }
 
-// ─── Card thu nhỏ cho carousel ────────────────────────────────────────────────
 @Composable
 private fun RecommendProductCard(
     product: Product,
@@ -149,7 +145,7 @@ private fun RecommendProductCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column {
-            // Ảnh sản phẩm
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -166,7 +162,7 @@ private fun RecommendProductCard(
                         contentScale = ContentScale.Crop
                     )
                 }
-                // Gradient overlay phía dưới ảnh
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -210,7 +206,6 @@ private fun RecommendProductCard(
     }
 }
 
-// ─── Shimmer placeholder ─────────────────────────────────────────────────────
 @Composable
 private fun ShimmerProductCard() {
     val infiniteTransition = rememberInfiniteTransition(label = "shimmer")

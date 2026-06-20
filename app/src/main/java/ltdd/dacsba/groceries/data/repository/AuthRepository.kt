@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.repository
+﻿package ltdd.dacsba.groceries.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -39,9 +39,9 @@ class AuthRepository {
             val userData = document.toObject(User::class.java)
 
             if (userData != null) {
-                // Kiểm tra tài khoản có bị khóa không
+
                 if (userData.isDeactivated) {
-                    auth.signOut()  // Đăng xuất ngay khỏi Firebase Auth
+                    auth.signOut()
                     throw Exception("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.")
                 }
                 Result.success(userData)

@@ -30,7 +30,6 @@ import ltdd.dacsba.groceries.data.model.User
 import ltdd.dacsba.groceries.ui.components.ImagePickerButton
 import ltdd.dacsba.groceries.ui.components.SmartImage
 
-
 @Composable
 fun AdminUsersScreen(
     navController: NavController,
@@ -75,8 +74,7 @@ fun AdminUsersContent(
         matchesQuery && matchesRole
     }
 
-    // Bottom Sheet chi tiết user (bao gồm quản lý avatar)
-    selectedUser?.let { user ->
+selectedUser?.let { user ->
         UserDetailSheet(
             user = user,
             isUploading = isUploading,
@@ -88,7 +86,7 @@ fun AdminUsersContent(
     }
 
     Column(modifier = Modifier.fillMaxSize().background(AdminBg)) {
-        // Header
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -104,8 +102,7 @@ fun AdminUsersContent(
             }
         }
 
-        // Search bar
-        OutlinedTextField(
+OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -163,8 +160,6 @@ fun AdminUsersContent(
     }
 }
 
-// ─── User Row Card ────────────────────────────────────────────────────────────
-
 @Composable
 fun UserRowCard(user: User, onClick: () -> Unit) {
     val roleColor = when (user.role) {
@@ -180,7 +175,7 @@ fun UserRowCard(user: User, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            // Avatar: ảnh nếu có URL, chữ cái nếu không
+
             UserAvatarCircle(user = user, size = 46)
 
             Spacer(Modifier.width(14.dp))
@@ -211,8 +206,6 @@ fun UserRowCard(user: User, onClick: () -> Unit) {
         }
     }
 }
-
-// ─── Avatar Circle Component ─────────────────────────────────────────────────
 
 @Composable
 fun UserAvatarCircle(user: User, size: Int = 46) {
@@ -255,8 +248,6 @@ fun UserAvatarCircle(user: User, size: Int = 46) {
     }
 }
 
-// ─── User Detail Bottom Sheet ─────────────────────────────────────────────────
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserDetailSheet(
@@ -286,12 +277,11 @@ fun UserDetailSheet(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Handle bar
+
             Box(modifier = Modifier.width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFE0E0E0)))
             Spacer(Modifier.height(16.dp))
 
-            // Avatar lớn + nút edit avatar
-            Box(contentAlignment = Alignment.BottomEnd) {
+Box(contentAlignment = Alignment.BottomEnd) {
                 UserAvatarCircle(user = user.copy(avatarUrl = if (avatarUrlInput != user.avatarUrl) avatarUrlInput else user.avatarUrl), size = 80)
                 IconButton(
                     onClick = { showAvatarSection = !showAvatarSection },
@@ -318,12 +308,11 @@ fun UserDetailSheet(
                 Text("🖼️ Ảnh đại diện", fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.align(Alignment.Start))
                 Spacer(Modifier.height(10.dp))
 
-                // ImagePickerButton hình tròn — chọn ảnh từ Gallery, upload Firebase Storage
-                ImagePickerButton(
+ImagePickerButton(
                     currentImageUrl = avatarUrlInput,
                     isUploading = isUploading,
                     onImagePicked = { uri ->
-                        // Hiện preview local ngay, không cần chờ upload xong
+
                         avatarUrlInput = uri.toString()
                         onUploadAvatar(uri) { downloadUrl ->
                             avatarUrlInput = downloadUrl
@@ -349,8 +338,7 @@ fun UserDetailSheet(
             HorizontalDivider(color = Color(0xFFEEEEEE))
             Spacer(Modifier.height(16.dp))
 
-            // Thông tin chi tiết
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 DetailRow("Email", user.email)
                 DetailRow("UID", user.uid.take(16) + "…")
                 DetailRow("Trạng thái", if (user.isDeactivated) "Bị khóa 🔒" else "Hoạt động ✅")
@@ -359,8 +347,7 @@ fun UserDetailSheet(
 
             Spacer(Modifier.height(20.dp))
 
-            // Khóa/Mở khóa
-            Button(
+Button(
                 onClick = onToggleDeactivate,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
@@ -400,7 +387,7 @@ fun AdminUsersPreview() {
     AdminUsersContent(
         users = listOf(
             User(uid = "1", username = "Nguyễn Văn A", email = "a@gmail.com", role = "BUYER"),
-            User(uid = "2", username = "Seller B", email = "b@gmail.com", role = "SELLER", avatarUrl = "https://i.pravatar.cc/150?img=3"),
+            User(uid = "2", username = "Seller B", email = "b@gmail.com", role = "SELLER", avatarUrl = "https://picsum.photos/seed/sellerB/200/200"),
             User(uid = "3", username = "Admin C", email = "c@gmail.com", role = "ADMIN"),
             User(uid = "4", username = "Blocked D", email = "d@gmail.com", role = "BUYER", isDeactivated = true),
         ),

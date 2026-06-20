@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.seller
+﻿package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -61,8 +61,7 @@ fun MainSellerScreen(
         }
     }
 
-
-    val bottomNavItems = listOf(
+val bottomNavItems = listOf(
         BottomNavItem("Dashboard", SellerRoutes.DASHBOARD, Icons.Default.Home),
         BottomNavItem("Products", SellerRoutes.PRODUCTS, Icons.Default.ShoppingCart),
         BottomNavItem("Orders", SellerRoutes.ORDERS, Icons.Default.List),

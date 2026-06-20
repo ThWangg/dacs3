@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.model
+﻿package ltdd.dacsba.groceries.data.model
 
 data class Order(
     val orderId: String = "",

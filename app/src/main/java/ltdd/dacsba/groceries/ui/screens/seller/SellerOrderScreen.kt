@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.seller
+﻿package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -116,7 +116,7 @@ fun SellerOrderContent(
             .fillMaxSize()
             .background(Color(0xFFFBFBFB))
     ) {
-        //header
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -143,8 +143,7 @@ fun SellerOrderContent(
             )
         }
 
-        //filter
-        OrderStatusFilterRow(
+OrderStatusFilterRow(
             selectedStatus = selectedStatus,
             onStatusSelected = { status -> selectedStatus = status }
         )
@@ -199,8 +198,7 @@ fun OrderStatusFilterRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
 
-        //all
-        FilterChip(
+FilterChip(
             selected = selectedStatus == null,
             onClick = { onStatusSelected(null) },
             label = { Text("Tất cả", fontSize = 12.sp) },
@@ -244,8 +242,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-
-            Row(
+Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -282,8 +279,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
                     }
                 }
 
-                //status
-                Surface(
+Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = statusBgColor
                 ) {
@@ -301,8 +297,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
             HorizontalDivider(color = Color(0xFFF0F0F0))
             Spacer(modifier = Modifier.height(12.dp))
 
-            //ds sp
-            order.items.forEach { item ->
+order.items.forEach { item ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -328,8 +323,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
             Divider(color = Color(0xFFF0F0F0))
             Spacer(modifier = Modifier.height(8.dp))
 
-            //tổng tiền
-            Row(
+Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -347,8 +341,7 @@ fun OrderItemCard(order: Order, onUpdateStatus: (String, OrderStatus) -> Unit = 
                 )
             }
 
-            // Action buttons for status transition
-            val nextStatus = when (order.status) {
+val nextStatus = when (order.status) {
                 OrderStatus.PENDING -> OrderStatus.SHIPPING
                 OrderStatus.SHIPPING -> OrderStatus.DELIVERED
                 else -> null

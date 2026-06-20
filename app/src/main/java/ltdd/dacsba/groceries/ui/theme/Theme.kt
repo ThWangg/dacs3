@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.theme
+﻿package ltdd.dacsba.groceries.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -42,7 +42,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun GroceriesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is disabled by default to enforce brand identity
+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {

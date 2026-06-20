@@ -39,6 +39,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import ltdd.dacsba.groceries.ui.components.SmartImage
 import ltdd.dacsba.groceries.data.model.ProductTags
+import ltdd.dacsba.groceries.ui.components.RatingDisplay
+import ltdd.dacsba.groceries.ui.components.RatingBar
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import ltdd.dacsba.groceries.R
@@ -155,7 +157,7 @@ fun BuyerHomeHeader(
     viewModel: BuyerHomeViewModel = viewModel(),
     onSearchClick: () -> Unit
 ) {
-    // ── Header UI ─────────────────────────────────────────────────────────────
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -164,7 +166,7 @@ fun BuyerHomeHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logo + Tên
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(id = R.drawable.tuat_logo),
@@ -178,11 +180,9 @@ fun BuyerHomeHeader(
                 )
             }
 
-            // Nút bên phải: Search
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
 
-                // ── Search ──
-                Surface(
+Surface(
                     modifier = Modifier.size(36.dp),
                     shape = CircleShape,
                     color = Color(0xFFF7F7F7),
@@ -196,8 +196,6 @@ fun BuyerHomeHeader(
         }
     }
 }
-
-
 
 @Composable
 fun StatusBanner(text: String, bg: Color, textColor: Color) {
@@ -235,7 +233,7 @@ fun BuyerHomeBody(
     val isLoadingRecommendations by viewModel.isLoadingRecommendations
 
     var selectedCategory by remember { mutableStateOf<ltdd.dacsba.groceries.data.model.Category?>(null) }
-    var sortOrder by remember { mutableStateOf(0) } // 0: None, 1: Low to High, 2: High to Low
+    var sortOrder by remember { mutableStateOf(0) }
 
     val approvedProducts = products.filter { it.status == "APPROVED" }
 
@@ -256,8 +254,7 @@ fun BuyerHomeBody(
 
     Column(modifier = Modifier.fillMaxSize().padding(top = 4.dp)) {
 
-        // ── Search Bar ───────────────────────────────────────────────────────────
-        androidx.compose.animation.AnimatedVisibility(visible = isSearchVisible) {
+androidx.compose.animation.AnimatedVisibility(visible = isSearchVisible) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
@@ -274,8 +271,7 @@ fun BuyerHomeBody(
             )
         }
 
-        // ── TabRow ─────────────────────────────────────────────────────────────
-        TabRow(
+TabRow(
             selectedTabIndex = pagerState.currentPage,
             containerColor = Color.White,
             contentColor = AccentOrange
@@ -298,15 +294,14 @@ fun BuyerHomeBody(
             }
         }
 
-        // ── Pages ──────────────────────────────────────────────────────────────
-        HorizontalPager(
+HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { page ->
             when (page) {
-                // ══ Tab 0: Sản phẩm ══════════════════════════════════════════════════
+
                 0 -> Column(modifier = Modifier.fillMaxSize()) {
-                    // Filter + Sort chips
+
                     LazyRow(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                         contentPadding = PaddingValues(horizontal = 20.dp),
@@ -387,9 +382,8 @@ fun BuyerHomeBody(
                     }
                 }
 
-                // ══ Tab 1: Dành cho bạn ═══════════════════════════════════════════
-                1 -> Column(modifier = Modifier.fillMaxSize()) {
-                    // Tag pills lý do gợi ý
+1 -> Column(modifier = Modifier.fillMaxSize()) {
+
                     if (userTagProfile.isNotEmpty()) {
                         Spacer(Modifier.height(10.dp))
                         Text(
@@ -505,7 +499,7 @@ fun ProductCard(product: Product, sellerName: String = "", onClick: () -> Unit) 
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // Hình ảnh + badge hết hàng
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -524,7 +518,7 @@ fun ProductCard(product: Product, sellerName: String = "", onClick: () -> Unit) 
                 } else {
                     Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.LightGray)
                 }
-                // Overlay hết hàng
+
                 if (isOutOfStock) {
                     Box(
                         modifier = Modifier
@@ -547,7 +541,7 @@ fun ProductCard(product: Product, sellerName: String = "", onClick: () -> Unit) 
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = product.name,
                 fontWeight = FontWeight.Bold,
@@ -555,7 +549,15 @@ fun ProductCard(product: Product, sellerName: String = "", onClick: () -> Unit) 
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
-            // Tên shop & Đã bán
+
+            // Hiển thị điểm đánh giá nếu có
+            if (product.reviewCount > 0) {
+                RatingDisplay(
+                    ratingAverage = product.ratingAverage,
+                    reviewCount = product.reviewCount
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -671,7 +673,7 @@ fun ProductDetailSheet(
                 Column {
                     Text(text = product.name, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkNavy)
                     Spacer(modifier = Modifier.height(4.dp))
-                    // Tên shop
+
                     if (sellerName.isNotBlank()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -747,6 +749,51 @@ fun ProductDetailSheet(
                 }
             }
 
+            // Rating section
+            if (product.reviewCount > 0) {
+                HorizontalDivider(color = Color(0xFFF0F0F0))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Đánh giá sản phẩm",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkNavy
+                        )
+                        Text(
+                            text = "Điểm trung bình / 5.0",
+                            fontSize = 11.sp,
+                            color = Color.Gray
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "★",
+                            fontSize = 20.sp,
+                            color = Color(0xFFFFC107)
+                        )
+                        Text(
+                            text = String.format("%.1f", product.ratingAverage),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF1B2430)
+                        )
+                        Text(
+                            text = "(${product.reviewCount})",
+                            fontSize = 13.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
+
             HorizontalDivider(color = Color(0xFFF0F0F0))
 
             if (!isOutOfStock) {
@@ -811,7 +858,7 @@ fun ProductDetailSheet(
                     }
                 }
             } else {
-                // Hết hàng — chỉ hiển thông báo
+
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = Color(0xFFFEF2F2),

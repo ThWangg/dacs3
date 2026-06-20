@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.model
+﻿package ltdd.dacsba.groceries.data.model
 
 data class SellerRequest(
     val requestId: String = "",
@@ -6,7 +6,7 @@ data class SellerRequest(
     val username: String = "",
     val email: String = "",
     val avatarUrl: String = "",
-    val message: String = "",         // Lý do muốn trở thành seller
-    val status: String = "PENDING",   // PENDING | APPROVED | REJECTED
+    val message: String = "",
+    val status: String = "PENDING",
     val createdAt: Long = System.currentTimeMillis()
 )

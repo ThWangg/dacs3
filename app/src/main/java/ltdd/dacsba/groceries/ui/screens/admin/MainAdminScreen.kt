@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.admin
+﻿package ltdd.dacsba.groceries.ui.screens.admin
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -32,8 +32,7 @@ fun MainAdminScreen(
     val pendingCount by remember { derivedStateOf { adminViewModel.pendingRequests.value.size } }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Tải yêu cầu pending ngay khi vào Admin
-    LaunchedEffect(Unit) { adminViewModel.loadPendingRequests() }
+LaunchedEffect(Unit) { adminViewModel.loadPendingRequests() }
 
     LaunchedEffect(snack) {
         snack?.let {

@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.repository
+﻿package ltdd.dacsba.groceries.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -22,8 +22,7 @@ class ChatRepository {
                 throw Exception("Invalid user IDs")
             }
 
-            // Tìm phòng chat đã tồn tại giữa 2 user
-            val query1 = chatRoomsRef
+val query1 = chatRoomsRef
                 .whereArrayContains("participants", currentUserId)
                 .get()
                 .await()
@@ -35,8 +34,7 @@ class ChatRepository {
                 }
             }
 
-            // Nếu chưa có, tạo phòng mới
-            val newRoomId = UUID.randomUUID().toString()
+val newRoomId = UUID.randomUUID().toString()
             val newRoom = ChatRoom(
                 roomId = newRoomId,
                 participants = listOf(currentUserId, otherUserId),
@@ -108,7 +106,7 @@ class ChatRepository {
                 if (roomSnapshot.exists()) {
                     val room = roomSnapshot.toObject(ChatRoom::class.java)
                     if (room != null) {
-                        // Tính toán lại số tin nhắn chưa đọc cho người nhận
+
                         val receiverId = room.participants.find { it != senderId } ?: ""
                         val unreadCounts = room.unreadCounts.toMutableMap()
                         if (receiverId.isNotEmpty()) {

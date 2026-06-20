@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.model
+﻿package ltdd.dacsba.groceries.data.model
 
 data class Category(
     val categoryId: String = "",
@@ -7,7 +7,7 @@ data class Category(
     val availableUnits: List<String> = emptyList()
 ) {
     companion object {
-        // Danh sách category cố định, có thể mở rộng hoặc load từ Firestore
+
         val defaultCategories = listOf(
             Category(
                 categoryId = "fresh_fruit",
@@ -71,7 +71,6 @@ data class Category(
             )
         )
 
-        // Tất cả các đơn vị phổ biến (dùng khi chưa chọn category)
-        val allUnits = listOf("kg", "g", "lít", "ml", "hộp", "chai", "gói", "túi", "lon", "lốc", "bó", "quả", "cái", "con", "miếng", "thùng")
+val allUnits = listOf("kg", "g", "lít", "ml", "hộp", "chai", "gói", "túi", "lon", "lốc", "bó", "quả", "cái", "con", "miếng", "thùng")
     }
 }

@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.user
+﻿package ltdd.dacsba.groceries.ui.screens.user
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,9 +37,8 @@ fun BuyerCartScreen(
     val selectedItemIds by viewModel.selectedItemIds
     val isLoading by viewModel.isLoading
     val context = LocalContext.current
-    
-    // Automatically reload when navigating back here
-    LaunchedEffect(Unit) {
+
+LaunchedEffect(Unit) {
         viewModel.loadCart()
     }
 
@@ -162,9 +161,8 @@ fun CartItemRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "${formattedPrice}đ", color = AccentOrange, fontWeight = FontWeight.SemiBold)
-                    
-                    // Nút tăng/giảm số lượng
-                    Row(
+
+Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {

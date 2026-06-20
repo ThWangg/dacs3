@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.admin
+﻿package ltdd.dacsba.groceries.ui.screens.admin
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -34,8 +34,6 @@ import ltdd.dacsba.groceries.ui.components.ImagePickerButton
 import ltdd.dacsba.groceries.ui.components.SmartImage
 import java.text.NumberFormat
 import java.util.Locale
-
-// ─── Main Screen ────────────────────────────────────────────────────────────
 
 @Composable
 fun AdminProductsScreen(
@@ -84,8 +82,7 @@ fun AdminProductsContent(
         matchesQuery && matchesCategory
     }
 
-    // Xác nhận xóa
-    deletingProduct?.let { p ->
+deletingProduct?.let { p ->
         AlertDialog(
             onDismissRequest = { deletingProduct = null },
             containerColor = Color.White,
@@ -106,8 +103,7 @@ fun AdminProductsContent(
         )
     }
 
-    // Sheet thêm mới
-    if (showAddSheet) {
+if (showAddSheet) {
         ProductFormSheet(
             product = null,
             isUploading = isUploading,
@@ -117,8 +113,7 @@ fun AdminProductsContent(
         )
     }
 
-    // Sheet chỉnh sửa
-    editingProduct?.let { p ->
+editingProduct?.let { p ->
         ProductFormSheet(
             product = p,
             isUploading = isUploading,
@@ -130,7 +125,7 @@ fun AdminProductsContent(
 
     Box(modifier = Modifier.fillMaxSize().background(AdminBg)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -148,8 +143,7 @@ fun AdminProductsContent(
                 }
             }
 
-            // Search bar
-            OutlinedTextField(
+OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -201,7 +195,7 @@ fun AdminProductsContent(
                         Icon(Icons.Default.Inventory, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(64.dp))
                         Spacer(Modifier.height(8.dp))
                         Text("Chưa có sản phẩm", color = Color.Gray, fontSize = 15.sp)
-                        // No seed option for admin
+
                     }
                 }
             } else {
@@ -222,11 +216,8 @@ fun AdminProductsContent(
             }
         }
 
-        // FAB removed so admin cannot add products
-    }
 }
-
-// ─── Product Card ────────────────────────────────────────────────────────────
+}
 
 @Composable
 fun AdminProductCard(
@@ -246,7 +237,7 @@ fun AdminProductCard(
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            // Ảnh sản phẩm
+
             Box(
                 modifier = Modifier.size(70.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFFF0F4F0)),
                 contentAlignment = Alignment.Center
@@ -274,12 +265,9 @@ fun AdminProductCard(
                 }
             }
 
-            // Edit and Delete buttons removed to prevent admin from editing or deleting products
-        }
+}
     }
 }
-
-// ─── Product Form Bottom Sheet ───────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -320,7 +308,7 @@ fun ProductFormSheet(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Handle bar
+
             Box(modifier = Modifier.width(40.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFE0E0E0)).align(Alignment.CenterHorizontally))
 
             Text(
@@ -329,8 +317,7 @@ fun ProductFormSheet(
                 fontSize = 18.sp
             )
 
-            // Tên sản phẩm
-            OutlinedTextField(
+OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; nameError = false },
                 label = { Text("Tên sản phẩm *") },
@@ -341,8 +328,7 @@ fun ProductFormSheet(
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AdminGreen)
             )
 
-            // Danh mục
-            Text("Danh mục *", fontSize = 13.sp, color = Color.Gray)
+Text("Danh mục *", fontSize = 13.sp, color = Color.Gray)
             ExposedDropdownMenuBox(expanded = showCategoryMenu, onExpandedChange = { showCategoryMenu = it }) {
                 OutlinedTextField(
                     value = "${selectedCategory.iconEmoji} ${selectedCategory.categoryName}",
@@ -367,8 +353,7 @@ fun ProductFormSheet(
                 }
             }
 
-            // Giá + Đơn vị (cùng hàng)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = price,
                     onValueChange = { price = it; priceError = false },
@@ -399,8 +384,7 @@ fun ProductFormSheet(
                 }
             }
 
-            // Tồn kho
-            OutlinedTextField(
+OutlinedTextField(
                 value = stock,
                 onValueChange = { stock = it },
                 label = { Text("Tồn kho") },
@@ -410,13 +394,12 @@ fun ProductFormSheet(
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AdminGreen)
             )
 
-            // Ảnh sản phẩm — chọn từ Gallery, upload Firebase Storage
-            Text("Ảnh sản phẩm", fontSize = 13.sp, color = Color.Gray)
+Text("Ảnh sản phẩm", fontSize = 13.sp, color = Color.Gray)
             ImagePickerButton(
                 currentImageUrl = imageUrl,
                 isUploading = isUploading,
                 onImagePicked = { uri ->
-                    // Hiện preview local ngay, không cần chờ upload xong
+
                     imageUrl = uri.toString()
                     onUploadImage(uri) { downloadUrl -> imageUrl = downloadUrl }
                 },
@@ -426,8 +409,7 @@ fun ProductFormSheet(
                 accentColor = AdminGreen
             )
 
-            // Mô tả
-            OutlinedTextField(
+OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Mô tả sản phẩm") },
@@ -439,8 +421,7 @@ fun ProductFormSheet(
 
             Spacer(Modifier.height(4.dp))
 
-            // Lưu button
-            Button(
+Button(
                 onClick = {
                     nameError = name.isBlank()
                     priceError = price.toDoubleOrNull() == null

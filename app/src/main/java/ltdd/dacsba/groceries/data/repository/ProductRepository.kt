@@ -1,11 +1,10 @@
-package ltdd.dacsba.groceries.data.repository
+﻿package ltdd.dacsba.groceries.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import ltdd.dacsba.groceries.data.constant.AppConstant
 import ltdd.dacsba.groceries.data.model.Product
-
 
 class ProductRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -43,9 +42,8 @@ class ProductRepository {
     suspend fun getProductsByTags(tags: List<String>): Result<List<Product>> {
         return try {
             if (tags.isEmpty()) return Result.success(emptyList())
-            
-            // Firestore limit is 10 for IN and array-contains-any
-            val limitedTags = tags.take(10)
+
+val limitedTags = tags.take(10)
             
             val snapshot = productCollection
                 .whereArrayContainsAny("tags", limitedTags)
@@ -64,8 +62,7 @@ class ProductRepository {
             val snapshot = productCollection.get().await()
             val allProducts = snapshot.toObjects(Product::class.java)
 
-            //filter
-            val filteredProducts = allProducts.filter { product ->
+val filteredProducts = allProducts.filter { product ->
                 product.status == "APPROVED" && product.name.contains(query, ignoreCase = true)
             }
             Result.success(filteredProducts)
@@ -119,9 +116,7 @@ class ProductRepository {
         }
     }
 
-    //dashboard seller
-
-    suspend fun getSellerProductsCount(sellerId: String): Result<List<Product>> {
+suspend fun getSellerProductsCount(sellerId: String): Result<List<Product>> {
         return try {
             val snapshot = productCollection
                 .whereEqualTo("sellerId", sellerId)

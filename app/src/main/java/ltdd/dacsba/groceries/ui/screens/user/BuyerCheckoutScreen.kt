@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.user
+﻿package ltdd.dacsba.groceries.ui.screens.user
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

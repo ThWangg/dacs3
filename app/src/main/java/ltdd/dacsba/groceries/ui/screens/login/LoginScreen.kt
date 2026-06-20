@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.login
+﻿package ltdd.dacsba.groceries.ui.screens.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,7 +28,7 @@ import ltdd.dacsba.groceries.data.constant.AppConstant
 import ltdd.dacsba.groceries.ui.components.AppTextField
 
 @Composable
-fun LoginScreen( //logic
+fun LoginScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
     initialMessage: String? = null
@@ -100,7 +100,7 @@ fun LoginScreen( //logic
 }
 
 @Composable
-fun LoginContent( // UI để preview
+fun LoginContent(
     email: String,
     password: String,
     isLoading: Boolean,
@@ -133,7 +133,7 @@ fun LoginContent( // UI để preview
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start
         ) {
-            //logo
+
             Row(
                 modifier = Modifier.padding(top = 180.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -148,18 +148,18 @@ fun LoginContent( // UI để preview
                 Column(
                     modifier = Modifier
                         .padding(start = 12.dp)
-                        .size(height = 70.dp, width = 120.dp) // adjusted width for title spacing
+                        .size(height = 70.dp, width = 120.dp)
                 ) {
                     HorizontalDivider(
                         modifier = Modifier.width(60.dp),
                         thickness = 4.dp,
-                        color = Color(0xFF787FF6) // BrandPrimary
+                        color = Color(0xFF787FF6)
                     )
                     Text(
                         text = "TAUT Shop",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2F98) // BrandTertiary
+                        color = Color(0xFF1F2F98)
                     )
                 }
             }
@@ -177,8 +177,7 @@ fun LoginContent( // UI để preview
                 color = Color.Gray,
                 fontSize = 16.sp)
 
-            //email
-            AppTextField(
+AppTextField(
                 value = email,
                 onValueChange = onEmailChange,
                 label = "Email",
@@ -186,8 +185,7 @@ fun LoginContent( // UI để preview
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
-            //pass
-            AppTextField(
+AppTextField(
                 value = password,
                 onValueChange = onPasswordChange,
                 label = "Mật khẩu",
@@ -196,8 +194,7 @@ fun LoginContent( // UI để preview
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-            //if( lỗi)
-            errorMessage?.let {
+errorMessage?.let {
                 Text(
                     text = it,
                     color = Color.Red,
@@ -208,8 +205,7 @@ fun LoginContent( // UI để preview
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            //login with premium brand gradient
-            Button(
+Button(
                 onClick = onLoginClick,
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
@@ -245,8 +241,7 @@ fun LoginContent( // UI để preview
 
             Spacer(modifier = Modifier.height(40.dp))
 
-
-            Row(
+Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -255,7 +250,7 @@ fun LoginContent( // UI để preview
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Đăng kí",
-                    color = Color(0xFF787FF6), // BrandPrimary
+                    color = Color(0xFF787FF6),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     modifier = Modifier.clickable { onSignUpClick() }

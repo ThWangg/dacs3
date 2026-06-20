@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.user
+﻿package ltdd.dacsba.groceries.ui.screens.user
 
 import android.app.Application
 import android.net.Uri
@@ -34,18 +34,15 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
     var isLoading = mutableStateOf(false)
     var message = mutableStateOf<String?>(null)
 
-    // ─── Recommendation ───────────────────────────────────────────────────────
-    var recommendedProducts = mutableStateOf<List<Product>>(emptyList())
+var recommendedProducts = mutableStateOf<List<Product>>(emptyList())
     var userTagProfile = mutableStateOf<List<String>>(emptyList())
     var isLoadingRecommendations = mutableStateOf(false)
 
-    // Seller request state
-    var sellerRequestStatus = mutableStateOf<String?>(null)
+var sellerRequestStatus = mutableStateOf<String?>(null)
     var isSubmittingRequest = mutableStateOf(false)
     var requestResult = mutableStateOf<String?>(null)
 
-    // Profile state
-    var currentUser = mutableStateOf<User?>(null)
+var currentUser = mutableStateOf<User?>(null)
     var isUploadingAvatar = mutableStateOf(false)
     var profileMessage = mutableStateOf<String?>(null)
 
@@ -56,19 +53,17 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
         loadRecommendations()
     }
 
-    // ─── Recommendations ──────────────────────────────────────────────────────
-
-    fun loadRecommendations() {
+fun loadRecommendations() {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             isLoadingRecommendations.value = true
             try {
-                // 1. Lấy tập hợp nhãn sở thích của người dùng từ các đơn hàng đã giao (DELIVERED)
+
                 val preferredTags = tagProfileRepository.getUserPreferredTags(uid)
                 userTagProfile.value = preferredTags.toList()
 
                 if (preferredTags.isNotEmpty()) {
-                    // 2. Lấy tất cả sản phẩm và dùng Content-Based Filtering để xếp hạng độ tương đồng Cosine
+
                     val result = productRepository.getAllProducts()
                     result.onSuccess { allProducts ->
                         val ranked = ContentBasedFilteringEngine.rankProducts(preferredTags, allProducts)
@@ -78,8 +73,7 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
 
                         recommendedProducts.value = ranked
 
-                        // Load tên seller cho sản phẩm đề xuất
-                        val extraSellerIds = ranked.map { it.sellerId }.distinct()
+val extraSellerIds = ranked.map { it.sellerId }.distinct()
                             .filter { !sellerNames.value.containsKey(it) }
                         if (extraSellerIds.isNotEmpty()) {
                             loadSellerNamesForRecommendations(extraSellerIds)
@@ -89,13 +83,13 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
                         recommendedProducts.value = emptyList()
                     }
                 } else {
-                    // User chưa có lịch sử mua hàng -> không có gợi ý
+
                     recommendedProducts.value = emptyList()
                 }
             } catch (_: Exception) {
                 recommendedProducts.value = emptyList()
             } finally {
-                // Đảm bảo luôn reset flag dù bất kỳ điều gì xảy ra
+
                 isLoadingRecommendations.value = false
             }
         }
@@ -117,16 +111,14 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
         } catch (_: Exception) {}
     }
 
-    // ─── Products ─────────────────────────────────────────────────────────────
-
-    fun fetchProducts() {
+fun fetchProducts() {
         viewModelScope.launch {
             isLoading.value = true
             message.value = null
             val result = productRepository.getAllProducts()
             result.onSuccess { list ->
                 products.value = list
-                // Load tên seller cho tất cả sản phẩm
+
                 loadSellerNames(list.map { it.sellerId }.distinct())
             }
             result.onFailure { error -> message.value = error.message }
@@ -162,9 +154,7 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    // ─── Profile ──────────────────────────────────────────────────────────────
-
-    fun loadUserProfile() {
+fun loadUserProfile() {
         viewModelScope.launch {
             try {
                 val uid = auth.currentUser?.uid ?: return@launch
@@ -174,11 +164,7 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    /**
-     * Nén ảnh → Base64 → lưu thẳng vào Firestore.
-     * Không cần Firebase Storage bucket.
-     */
-    fun uploadAndUpdateAvatar(uri: Uri) {
+fun uploadAndUpdateAvatar(uri: Uri) {
         viewModelScope.launch {
             val uid = auth.currentUser?.uid ?: return@launch
             isUploadingAvatar.value = true
@@ -233,9 +219,7 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun clearProfileMessage() { profileMessage.value = null }
 
-    // ─── Seller Request ───────────────────────────────────────────────────────
-
-    fun checkSellerRequestStatus() {
+fun checkSellerRequestStatus() {
         viewModelScope.launch {
             sellerReqRepo.getMyRequestStatus().onSuccess { status ->
                 sellerRequestStatus.value = status
@@ -257,9 +241,8 @@ class BuyerHomeViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun clearRequestResult() { requestResult.value = null }
-    
-    // ─── Cart ─────────────────────────────────────────────────────────────────
-    fun addToCart(product: Product, quantity: Int, onSuccess: () -> Unit, onError: (String) -> Unit) {
+
+fun addToCart(product: Product, quantity: Int, onSuccess: () -> Unit, onError: (String) -> Unit) {
         val uid = auth.currentUser?.uid
         if (uid == null) {
             onError("Vui lòng đăng nhập")

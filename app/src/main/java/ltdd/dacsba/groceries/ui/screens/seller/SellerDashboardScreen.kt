@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.seller
+﻿package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -103,7 +103,7 @@ fun SellerDashboardContent(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        //header
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -150,7 +150,7 @@ fun SellerDashboardContent(
                 CircularProgressIndicator(color = SellerGreen)
             }
         } else {
-            //hang 1
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -175,8 +175,7 @@ fun SellerDashboardContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            //hàng 2
-            Row(
+Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {

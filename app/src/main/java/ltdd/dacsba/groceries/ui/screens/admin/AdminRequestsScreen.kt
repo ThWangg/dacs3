@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.admin
+﻿package ltdd.dacsba.groceries.ui.screens.admin
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -50,7 +50,7 @@ fun AdminRequestsScreen(navController: NavController, viewModel: AdminViewModel)
             .fillMaxSize()
             .background(AdminBg)
     ) {
-        // Header
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.seller
+﻿package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -31,7 +31,7 @@ data class NotificationItem(
     val title: String,
     val message: String,
     val timestamp: Long,
-    val type: String // "PRODUCT_APPROVED", "NEW_ORDER"
+    val type: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,19 +45,19 @@ fun SellerNotificationScreen(
 
     val notifications = remember(products, orders) {
         val list = mutableListOf<NotificationItem>()
-        // Approved products
+
         products.filter { it.status == "APPROVED" }.forEach { p ->
             list.add(
                 NotificationItem(
                     id = p.id,
                     title = "Sản phẩm được duyệt",
                     message = "Admin đã duyệt sản phẩm \"${p.name}\". Sản phẩm hiện đã có trên shop.",
-                    timestamp = p.createdAt, // Ideally should be approvedAt
+                    timestamp = p.createdAt,
                     type = "PRODUCT_APPROVED"
                 )
             )
         }
-        // New orders
+
         orders.forEach { o ->
             list.add(
                 NotificationItem(

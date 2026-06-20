@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.chat
+﻿package ltdd.dacsba.groceries.ui.screens.chat
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -49,9 +49,8 @@ class ChatViewModel : ViewModel() {
             val adminUser = chatRepository.getAdminUser()
             _adminUserId.value = adminUser?.uid
             updateSortedRooms()
-            
-            // Nếu người dùng hiện tại không phải Admin, tự động tạo/lấy phòng chat với Admin để luôn hiển thị
-            adminUser?.uid?.let { adminUid ->
+
+adminUser?.uid?.let { adminUid ->
                 if (currentUserId != adminUid) {
                     chatRepository.getOrCreateChatRoom(currentUserId, adminUid)
                 }
@@ -90,7 +89,7 @@ class ChatViewModel : ViewModel() {
 
     fun loadMessages(roomId: String, otherUserId: String) {
         viewModelScope.launch {
-            // Load other user info
+
             val result = chatRepository.getUserInfo(otherUserId)
             result.onSuccess { user ->
                 _otherUser.value = user
@@ -98,10 +97,9 @@ class ChatViewModel : ViewModel() {
                 _error.value = "Không thể tải thông tin người dùng"
             }
 
-            // Load messages real-time
-            chatRepository.getMessages(roomId).collect { msgList ->
+chatRepository.getMessages(roomId).collect { msgList ->
                 _messages.value = msgList
-                // Reset unread count when viewing messages
+
                 chatRepository.resetUnreadCount(roomId, currentUserId)
             }
         }

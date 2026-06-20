@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.components
+﻿package ltdd.dacsba.groceries.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,7 +22,7 @@ fun TagSelectorSection(
     selectedTags: List<String>,
     onTagsChanged: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
-    accentColor: Color = Color(0xFF787FF6) // BrandPrimary by default
+    accentColor: Color = Color(0xFF787FF6)
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var customTag by remember { mutableStateOf("") }
@@ -57,8 +57,7 @@ fun TagSelectorSection(
             }
         }
 
-        // Selected tags preview (when collapsed)
-        if (!isExpanded && selectedTags.isNotEmpty()) {
+if (!isExpanded && selectedTags.isNotEmpty()) {
             FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -82,8 +81,7 @@ fun TagSelectorSection(
             }
         }
 
-        // Expanded management section
-        if (isExpanded) {
+if (isExpanded) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,7 +96,7 @@ fun TagSelectorSection(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Selected Tags List
+
                     if (selectedTags.isNotEmpty()) {
                         Text("Nhãn đã chọn", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
                         FlowRow(
@@ -115,8 +113,7 @@ fun TagSelectorSection(
                         Divider(color = Color(0xFFEEEEEE))
                     }
 
-                    // Add Custom Tag
-                    Row(
+Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -155,8 +152,7 @@ fun TagSelectorSection(
                         }
                     }
 
-                    // Suggested Tags
-                    if (suggestedTags.isNotEmpty()) {
+if (suggestedTags.isNotEmpty()) {
                         Text("Gợi ý cho danh mục này", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.Gray)
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),

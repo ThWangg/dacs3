@@ -267,7 +267,7 @@ fun EditProdPreview() {
         unit = "kg",
         stock = 50,
         categoryId = "fresh_fruit",
-        imageUrl = "https://example.com/apple.jpg"
+        imageUrl = "https://picsum.photos/seed/apple/400/400",
     )
 
     EditProductContent(

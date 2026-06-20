@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.model
+﻿package ltdd.dacsba.groceries.data.model
 
 data class Product(
     val id: String = "",
@@ -11,11 +11,9 @@ data class Product(
     val stock: Int = 0,
     val sellerId: String = "",
     val soldCount: Int = 0,
-    val status: String = "APPROVED", // "PENDING", "APPROVED", "REJECTED"
+    val status: String = "APPROVED",
 
-
-    //recommendation system
-    val tags: List<String> = emptyList(),
+val tags: List<String> = emptyList(),
     val ratingAverage: Double = 0.0,
     val reviewCount: Int = 0,
     val categorySoldCount: Int = 0,

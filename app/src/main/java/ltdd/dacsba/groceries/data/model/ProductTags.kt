@@ -1,16 +1,8 @@
-package ltdd.dacsba.groceries.data.model
+﻿package ltdd.dacsba.groceries.data.model
 
-/**
- * Hồ Sơ Đặc Trưng Sản Phẩm (Item Profile)
- *
- * Bộ nhãn (tags) chuẩn hoá dùng để mô tả đặc trưng sản phẩm.
- * Mỗi sản phẩm lưu danh sách tag trong trường `Product.tags: List<String>`.
- * Ví dụ: ["rau_cu", "huu_co", "do_tuoi"]
- */
 object ProductTags {
 
-    // ─── Nhóm: Loại thực phẩm ────────────────────────────────────────────────
-    const val RAU_CU        = "rau_cu"
+const val RAU_CU        = "rau_cu"
     const val TRAI_CAY      = "trai_cay"
     const val THIT          = "thit"
     const val HAI_SAN       = "hai_san"
@@ -22,15 +14,13 @@ object ProductTags {
     const val GIA_VI        = "gia_vi"
     const val DO_AN_VAT     = "do_an_vat"
 
-    // ─── Nhóm: Chất lượng / Xuất xứ ──────────────────────────────────────────
-    const val HUU_CO        = "huu_co"
+const val HUU_CO        = "huu_co"
     const val SACH          = "sach"
     const val NHAP_KHAU     = "nhap_khau"
     const val TRONG_NUOC    = "trong_nuoc"
     const val CHUNG_NHAN    = "chung_nhan_vietgap"
 
-    // ─── Nhóm: Trạng thái / Chế biến ─────────────────────────────────────────
-    const val DO_TUOI       = "do_tuoi"
+const val DO_TUOI       = "do_tuoi"
     const val DONG_LANH     = "dong_lanh"
     const val KHO           = "kho"
     const val TUOI_SONG     = "tuoi_song"
@@ -38,24 +28,18 @@ object ProductTags {
     const val PHI_LE        = "phi_le"
     const val CO_XUONG      = "co_xuong"
 
-    // ─── Nhóm: Dinh dưỡng / Sức khoẻ ────────────────────────────────────────
-    const val GIAM_CAN      = "giam_can"
+const val GIAM_CAN      = "giam_can"
     const val NHIEU_PROTEIN = "nhieu_protein"
     const val IT_CALO       = "it_calo"
     const val KHONG_GLUTEN  = "khong_gluten"
     const val AN_CHAY       = "an_chay"
     const val SANG_LOC      = "sang_loc"
 
-    // ─── Nhóm: Đóng gói ───────────────────────────────────────────────────────
-    const val DONG_GOI_SAN  = "dong_goi_san"
+const val DONG_GOI_SAN  = "dong_goi_san"
     const val BAN_LE        = "ban_le"
     const val SUA_HOT       = "sua_hot"
 
-    // =========================================================================
-    // Mapping: categoryId → danh sách tag GỢI Ý
-    // Seller vẫn có thể thêm tag tự do ngoài danh sách này
-    // =========================================================================
-    val suggestedTagsByCategory: Map<String, List<String>> = mapOf(
+val suggestedTagsByCategory: Map<String, List<String>> = mapOf(
         "fresh_veggie" to listOf(
             RAU_CU, HUU_CO, DO_TUOI, SACH, TRONG_NUOC, NHAP_KHAU,
             CHUNG_NHAN, GIAM_CAN, IT_CALO, AN_CHAY, DONG_GOI_SAN
@@ -98,10 +82,7 @@ object ProductTags {
         )
     )
 
-    // =========================================================================
-    // Nhóm tag cho UI (hiển thị theo section)
-    // =========================================================================
-    data class TagGroup(val groupName: String, val tags: List<String>)
+data class TagGroup(val groupName: String, val tags: List<String>)
 
     val displayGroups: List<TagGroup> = listOf(
         TagGroup(
@@ -122,8 +103,7 @@ object ProductTags {
         )
     )
 
-    // Nhãn hiển thị thân thiện (key = tag constant)
-    val tagDisplayName: Map<String, String> = mapOf(
+val tagDisplayName: Map<String, String> = mapOf(
         RAU_CU        to "Rau củ",
         TRAI_CAY      to "Trái cây",
         THIT          to "Thịt",
@@ -158,15 +138,11 @@ object ProductTags {
         SUA_HOT       to "Sữa hạt"
     )
 
-    /** Trả về label hiển thị cho người dùng; fallback = chính tag key */
-    fun displayNameOf(tag: String): String = tagDisplayName[tag] ?: tag.replace("_", " ")
+fun displayNameOf(tag: String): String = tagDisplayName[tag] ?: tag.replace("_", " ")
 
     const val MAX_TAGS = 10
 
-    // =========================================================================
-    // Auto Generation Logic
-    // =========================================================================
-    val autoTagsByCategory: Map<String, List<String>> = mapOf(
+val autoTagsByCategory: Map<String, List<String>> = mapOf(
         "fresh_veggie" to listOf(RAU_CU, "thuc_pham_xanh"),
         "fresh_fruit" to listOf(TRAI_CAY, "thuc_pham_xanh"),
         "meat_seafood" to listOf("thuc_pham_song"),
@@ -189,17 +165,12 @@ object ProductTags {
         "việt gap" to CHUNG_NHAN
     )
 
-    /**
-     * Tự động sinh tags dựa trên category và từ khoá trong tên sản phẩm.
-     */
-    fun generateAutoTags(categoryId: String, productName: String): List<String> {
+fun generateAutoTags(categoryId: String, productName: String): List<String> {
         val tags = mutableSetOf<String>()
-        
-        // 1. Tự động từ Category
-        autoTagsByCategory[categoryId]?.let { tags.addAll(it) }
-        
-        // 2. Tự động từ Tên sản phẩm
-        val lowerName = productName.lowercase()
+
+autoTagsByCategory[categoryId]?.let { tags.addAll(it) }
+
+val lowerName = productName.lowercase()
         for ((keyword, tag) in keywordToTag) {
             if (lowerName.contains(keyword)) {
                 tags.add(tag)
@@ -210,13 +181,4 @@ object ProductTags {
     }
 }
 
-// ─── Extension function ────────────────────────────────────────────────────────
-
-/**
- * Trả về "hồ sơ đặc trưng" (Item Profile) của sản phẩm.
- * Đây chính là alias của Product.tags.
- *
- * Ví dụ sử dụng:
- *   val profile = product.itemProfile()   // ["rau_cu", "huu_co", "do_tuoi"]
- */
 fun Product.itemProfile(): List<String> = tags

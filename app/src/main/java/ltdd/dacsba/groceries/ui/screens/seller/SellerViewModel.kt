@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.seller
+﻿package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -15,7 +15,6 @@ import ltdd.dacsba.groceries.data.repository.OrderRepository
 import ltdd.dacsba.groceries.data.model.OrderStatus
 import ltdd.dacsba.groceries.data.model.SellerActivity
 
-
 class SellerViewModel : ViewModel() {
     private val productRepository = ProductRepository()
     private val orderRepository = OrderRepository()
@@ -27,12 +26,10 @@ class SellerViewModel : ViewModel() {
     var isLoading = mutableStateOf(false)
     var message = mutableStateOf<String?>(null)
 
-    // status
-    var addSuccess = mutableStateOf(false)
+var addSuccess = mutableStateOf(false)
     var updateSuccess = mutableStateOf(false)
 
-    // dashboard
-    var totalProducts = mutableStateOf(0)
+var totalProducts = mutableStateOf(0)
     var totalSold = mutableStateOf(0)
     var avgRating = mutableStateOf(0.0)
     var totalStock = mutableStateOf(0)
@@ -52,8 +49,7 @@ class SellerViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
 
-            // Load products
-            val result = productRepository.getSellerProductsCount(currentUserId)
+val result = productRepository.getSellerProductsCount(currentUserId)
             result.onSuccess { list ->
                 products.value = list
                 totalProducts.value = list.size
@@ -67,11 +63,9 @@ class SellerViewModel : ViewModel() {
                 message.value = error.message
             }
 
-            // Load orders của seller này
-            loadOrders(currentUserId)
-            
-            // Load activities
-            loadActivities(currentUserId)
+loadOrders(currentUserId)
+
+loadActivities(currentUserId)
 
             isLoading.value = false
         }
@@ -197,15 +191,14 @@ class SellerViewModel : ViewModel() {
                         }
                     }
                     OrderStatus.DELIVERED -> {
-                        // Dùng Transaction để cập nhật trạng thái đơn + tăng soldCount nguyên tử
+
                         db.runTransaction { transaction ->
                             val orderRef = db.collection(AppConstant.COLLECTION_ORDERS).document(orderId)
                             val orderSnapshot = transaction.get(orderRef)
                             val order = orderSnapshot.toObject(Order::class.java)
                                 ?: throw Exception("Không thể đọc thông tin đơn hàng")
 
-                            // Phase 1: All Reads
-                            val soldUpdates = mutableListOf<Pair<com.google.firebase.firestore.DocumentReference, Int>>()
+val soldUpdates = mutableListOf<Pair<com.google.firebase.firestore.DocumentReference, Int>>()
                             for (item in order.items) {
                                 val productRef = db.collection(AppConstant.COLLECTION_PRODUCTS).document(item.productId)
                                 val prodSnapshot = transaction.get(productRef)
@@ -216,13 +209,11 @@ class SellerViewModel : ViewModel() {
                                 }
                             }
 
-                            // Phase 2: All Writes
-                            for ((productRef, newSoldCount) in soldUpdates) {
+for ((productRef, newSoldCount) in soldUpdates) {
                                 transaction.update(productRef, "soldCount", newSoldCount)
                             }
 
-                            // Cập nhật trạng thái đơn hàng
-                            transaction.update(orderRef, mapOf(
+transaction.update(orderRef, mapOf(
                                 "status" to OrderStatus.DELIVERED.name,
                                 "updatedAt" to System.currentTimeMillis()
                             ))

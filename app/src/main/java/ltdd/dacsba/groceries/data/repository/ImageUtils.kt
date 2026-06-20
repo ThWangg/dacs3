@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.repository
+﻿package ltdd.dacsba.groceries.data.repository
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -7,21 +7,13 @@ import android.net.Uri
 import android.util.Base64
 import java.io.ByteArrayOutputStream
 
-/**
- * Tiện ích xử lý ảnh: nén + chuyển sang Base64 để lưu thẳng vào Firestore.
- * Không cần Firebase Storage.
- */
 object ImageUtils {
 
     private const val MAX_WIDTH = 600
     private const val MAX_HEIGHT = 600
-    private const val JPEG_QUALITY = 60   // 0-100, càng nhỏ file càng nhẹ
+    private const val JPEG_QUALITY = 60
 
-    /**
-     * Đọc ảnh từ URI, scale nhỏ lại, rồi trả về chuỗi Base64.
-     * Kết quả lưu vào Firestore dưới dạng string "data:image/jpeg;base64,..."
-     */
-    fun uriToBase64(context: Context, uri: Uri): String {
+fun uriToBase64(context: Context, uri: Uri): String {
         val inputStream = context.contentResolver.openInputStream(uri)
             ?: throw Exception("Không đọc được file ảnh")
 

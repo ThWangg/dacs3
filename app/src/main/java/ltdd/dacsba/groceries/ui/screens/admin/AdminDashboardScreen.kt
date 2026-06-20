@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.admin
+﻿package ltdd.dacsba.groceries.ui.screens.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -71,7 +71,7 @@ fun AdminDashboardContent(
             .background(AdminBg)
             .verticalScroll(rememberScrollState())
     ) {
-        // Header gradient banner
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -136,8 +136,7 @@ fun AdminDashboardContent(
 
         Spacer(Modifier.height(12.dp))
 
-        // Row 1
-        Row(
+Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
@@ -163,8 +162,7 @@ fun AdminDashboardContent(
 
         Spacer(Modifier.height(12.dp))
 
-        // Row 2
-        Row(
+Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
@@ -190,8 +188,7 @@ fun AdminDashboardContent(
 
         Spacer(Modifier.height(12.dp))
 
-        // Row 3 — Yêu cầu Seller đang chờ
-        Row(
+Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
@@ -210,8 +207,7 @@ fun AdminDashboardContent(
 
         Spacer(Modifier.height(28.dp))
 
-        // Quick info card
-        Card(
+Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),

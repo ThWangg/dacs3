@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.seller
+﻿package ltdd.dacsba.groceries.ui.screens.seller
 
 import android.app.Application
 import android.net.Uri
@@ -37,8 +37,7 @@ class SellerProfileViewModel(application: Application) : AndroidViewModel(applic
     var isEditMode = mutableStateOf(false)
         private set
 
-    //lưu data gốc để restore khi bỏ edit
-    private var originalUsername = ""
+private var originalUsername = ""
     private var originalShopName = ""
     private var originalPhone = ""
 
@@ -82,16 +81,14 @@ class SellerProfileViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    //lưu lại tên trước khi vô chỉnh sửa
-    fun enterEditMode() {
+fun enterEditMode() {
         originalUsername = uiState.value.username
         originalShopName = uiState.value.shopName
         originalPhone = uiState.value.phone
         isEditMode.value = true
     }
 
-    //restore lại nếu huỷ edit
-    fun cancelEdit() {
+fun cancelEdit() {
         uiState.value = uiState.value.copy(
             username = originalUsername,
             shopName = originalShopName,

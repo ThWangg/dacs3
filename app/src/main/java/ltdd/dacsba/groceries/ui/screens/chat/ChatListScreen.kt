@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.chat
+﻿package ltdd.dacsba.groceries.ui.screens.chat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

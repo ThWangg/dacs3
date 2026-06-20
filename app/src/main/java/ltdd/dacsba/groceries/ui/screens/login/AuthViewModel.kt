@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.login
+﻿package ltdd.dacsba.groceries.ui.screens.login
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -7,8 +7,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import ltdd.dacsba.groceries.data.model.User
 import ltdd.dacsba.groceries.data.repository.AuthRepository
-
-
 
 class AuthViewModel: ViewModel() {
     private val authRepository = AuthRepository()
@@ -79,7 +77,7 @@ class AuthViewModel: ViewModel() {
                     com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
                 }
             } catch (e: Exception) {
-                // Lỗi kết nối hoặc lỗi Firestore, đăng xuất để đảm bảo an toàn
+
                 com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
             } finally {
                 autoLoginChecking.value = false
@@ -87,6 +85,4 @@ class AuthViewModel: ViewModel() {
         }
     }
 }
-
-
 

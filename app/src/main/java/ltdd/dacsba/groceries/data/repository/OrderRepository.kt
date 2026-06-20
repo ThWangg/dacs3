@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.data.repository
+﻿package ltdd.dacsba.groceries.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -17,7 +17,7 @@ class OrderRepository {
             val newOrder = order.copy(orderId = orderId)
             
             db.runTransaction { transaction ->
-                // Phase 1: All Reads and validations
+
                 val stockUpdates = mutableListOf<Pair<com.google.firebase.firestore.DocumentReference, Int>>()
                 for (item in order.items) {
                     val productRef = db.collection(AppConstant.COLLECTION_PRODUCTS).document(item.productId)
@@ -33,14 +33,12 @@ class OrderRepository {
                     val newStock = (currentStock - item.quantity).toInt()
                     stockUpdates.add(productRef to newStock)
                 }
-                
-                // Phase 2: All Writes
-                for ((productRef, newStock) in stockUpdates) {
+
+for ((productRef, newStock) in stockUpdates) {
                     transaction.update(productRef, "stock", newStock)
                 }
-                
-                // 2. Lưu đơn hàng mới
-                val orderRef = ordersCollection.document(orderId)
+
+val orderRef = ordersCollection.document(orderId)
                 transaction.set(orderRef, newOrder)
                 null
             }.await()
@@ -75,14 +73,12 @@ class OrderRepository {
                     throw Exception("Đơn hàng không tồn tại")
                 }
                 val order = orderSnapshot.toObject(Order::class.java) ?: throw Exception("Không thể đọc thông tin đơn hàng")
-                
-                // Nếu đơn hàng đã hủy rồi thì không cần hoàn trả nữa
-                if (order.status == OrderStatus.CANCELLED) {
+
+if (order.status == OrderStatus.CANCELLED) {
                     return@runTransaction null
                 }
-                
-                // Phase 1: All Reads
-                val stockUpdates = mutableListOf<Pair<com.google.firebase.firestore.DocumentReference, Int>>()
+
+val stockUpdates = mutableListOf<Pair<com.google.firebase.firestore.DocumentReference, Int>>()
                 for (item in order.items) {
                     val productRef = db.collection(AppConstant.COLLECTION_PRODUCTS).document(item.productId)
                     val prodSnapshot = transaction.get(productRef)
@@ -92,14 +88,12 @@ class OrderRepository {
                         stockUpdates.add(productRef to newStock)
                     }
                 }
-                
-                // Phase 2: All Writes
-                for ((productRef, newStock) in stockUpdates) {
+
+for ((productRef, newStock) in stockUpdates) {
                     transaction.update(productRef, "stock", newStock)
                 }
-                
-                // 2. Cập nhật trạng thái đơn hàng sang CANCELLED
-                transaction.update(orderRef, "status", OrderStatus.CANCELLED.name)
+
+transaction.update(orderRef, "status", OrderStatus.CANCELLED.name)
                 transaction.update(orderRef, "updatedAt", System.currentTimeMillis())
                 null
             }.await()

@@ -1,23 +1,20 @@
 package ltdd.dacsba.groceries.ui.screens.user
 
+import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,12 +33,13 @@ import kotlinx.coroutines.launch
 import ltdd.dacsba.groceries.data.model.Order
 import ltdd.dacsba.groceries.data.model.OrderItem
 import ltdd.dacsba.groceries.data.model.OrderStatus
+import ltdd.dacsba.groceries.ui.components.ImagePickerButton
+import ltdd.dacsba.groceries.ui.components.RatingBar
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// Tab data class
 private data class OrderTab(
     val label: String,
     val status: OrderStatus?,
@@ -64,13 +62,17 @@ fun BuyerOrderScreen(
     val orders by viewModel.orders
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
+    val reviewedKeys by viewModel.reviewedKeys
+    val isSubmittingReview by viewModel.isSubmittingReview
 
     var selectedTabIndex by remember { mutableStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Reload on enter
-    LaunchedEffect(Unit) {
+    // State cho review sheet
+    var reviewingItem by remember { mutableStateOf<Pair<Order, OrderItem>?>(null) }
+
+LaunchedEffect(Unit) {
         viewModel.loadOrders()
     }
 
@@ -129,7 +131,7 @@ fun BuyerOrderScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Tab row
+
             BuyerOrderTabRow(
                 tabs = orderTabs,
                 selectedIndex = selectedTabIndex,
@@ -139,8 +141,7 @@ fun BuyerOrderScreen(
                 onTabSelected = { selectedTabIndex = it }
             )
 
-            // Content
-            Box(modifier = Modifier.fillMaxSize()) {
+Box(modifier = Modifier.fillMaxSize()) {
                 when {
                     isLoading -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -191,6 +192,7 @@ fun BuyerOrderScreen(
                             items(filteredOrders, key = { it.orderId }) { order ->
                                 BuyerOrderCard(
                                     order = order,
+                                    reviewedKeys = reviewedKeys,
                                     onCancelOrder = if (order.status == OrderStatus.PENDING) {
                                         {
                                             viewModel.cancelOrder(
@@ -207,6 +209,9 @@ fun BuyerOrderScreen(
                                                 }
                                             )
                                         }
+                                    } else null,
+                                    onReviewItem = if (order.status == OrderStatus.DELIVERED) {
+                                        { item -> reviewingItem = order to item }
                                     } else null
                                 )
                             }
@@ -216,6 +221,33 @@ fun BuyerOrderScreen(
                 }
             }
         }
+    }
+
+    // Review bottom sheet
+    reviewingItem?.let { (order, item) ->
+        ReviewBottomSheet(
+            orderId = order.orderId,
+            orderItem = item,
+            isSubmitting = isSubmittingReview,
+            onDismiss = { reviewingItem = null },
+            onSubmit = { rating, comment, imageUri ->
+                viewModel.submitReview(
+                    orderId = order.orderId,
+                    productId = item.productId,
+                    rating = rating,
+                    comment = comment,
+                    imageUri = imageUri,
+                    productName = item.productName,
+                    onSuccess = {
+                        reviewingItem = null
+                        scope.launch { snackbarHostState.showSnackbar("✅ Đánh giá đã được gửi!") }
+                    },
+                    onError = { err ->
+                        scope.launch { snackbarHostState.showSnackbar("❌ $err") }
+                    }
+                )
+            }
+        )
     }
 }
 
@@ -380,7 +412,9 @@ private fun BuyerOrderEmptyState(tab: OrderTab) {
 @Composable
 private fun BuyerOrderCard(
     order: Order,
-    onCancelOrder: (() -> Unit)?
+    reviewedKeys: Set<String> = emptySet(),
+    onCancelOrder: (() -> Unit)? = null,
+    onReviewItem: ((OrderItem) -> Unit)? = null
 ) {
     var showCancelDialog by remember { mutableStateOf(false) }
     var isExpanded by remember { mutableStateOf(false) }
@@ -413,8 +447,7 @@ private fun BuyerOrderCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // Header row
-            Row(
+Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -449,8 +482,7 @@ private fun BuyerOrderCard(
                     }
                 }
 
-                // Status chip
-                Surface(
+Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = statusBg
                 ) {
@@ -478,11 +510,15 @@ private fun BuyerOrderCard(
             HorizontalDivider(color = Color(0xFFF0F0F0))
             Spacer(Modifier.height(12.dp))
 
-            // Product preview (first 2 items, then expand)
             val previewItems = if (isExpanded) order.items else order.items.take(2)
 
             previewItems.forEach { item ->
-                BuyerOrderItemRow(item = item)
+                BuyerOrderItemRow(
+                    item = item,
+                    showReviewButton = order.status == OrderStatus.DELIVERED && onReviewItem != null,
+                    isReviewed = reviewedKeys.contains("${order.orderId}_${item.productId}"),
+                    onReview = { onReviewItem?.invoke(item) }
+                )
                 Spacer(Modifier.height(6.dp))
             }
 
@@ -504,8 +540,7 @@ private fun BuyerOrderCard(
             HorizontalDivider(color = Color(0xFFF0F0F0))
             Spacer(Modifier.height(10.dp))
 
-            // Total & shipping address
-            Row(
+Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -536,8 +571,7 @@ private fun BuyerOrderCard(
                 }
             }
 
-            // Cancel button (only for PENDING)
-            if (onCancelOrder != null) {
+if (onCancelOrder != null) {
                 Spacer(Modifier.height(12.dp))
                 OutlinedButton(
                     onClick = { showCancelDialog = true },
@@ -554,8 +588,7 @@ private fun BuyerOrderCard(
         }
     }
 
-    // Cancel confirmation dialog
-    if (showCancelDialog) {
+if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
             containerColor = Color.White,
@@ -610,34 +643,240 @@ private fun BuyerOrderCard(
 }
 
 @Composable
-private fun BuyerOrderItemRow(item: OrderItem) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .background(AccentOrange.copy(alpha = 0.5f), CircleShape)
-            )
-            Spacer(Modifier.width(8.dp))
+private fun BuyerOrderItemRow(
+    item: OrderItem,
+    showReviewButton: Boolean = false,
+    isReviewed: Boolean = false,
+    onReview: () -> Unit = {}
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .background(AccentOrange.copy(alpha = 0.5f), CircleShape)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "${item.productName} x${item.quantity} ${item.unit}",
+                    fontSize = 13.sp,
+                    color = Color(0xFF424242),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             Text(
-                text = "${item.productName} x${item.quantity} ${item.unit}",
+                text = formatBuyerCurrency(item.priceAtOrder * item.quantity),
                 fontSize = 13.sp,
-                color = Color(0xFF424242),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                fontWeight = FontWeight.SemiBold,
+                color = AccentOrange
             )
         }
-        Text(
-            text = formatBuyerCurrency(item.priceAtOrder * item.quantity),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = AccentOrange
-        )
+        if (showReviewButton) {
+            Spacer(Modifier.height(4.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = if (isReviewed) Color(0xFFF0F0F0) else AccentOrange.copy(alpha = 0.12f)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .then(
+                            if (!isReviewed) Modifier.clickable { onReview() } else Modifier
+                        )
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isReviewed) Icons.Default.CheckCircle else Icons.Default.Star,
+                        contentDescription = null,
+                        tint = if (isReviewed) Color(0xFF22C55E) else AccentOrange,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = if (isReviewed) "Đã đánh giá" else "Đánh giá",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isReviewed) Color(0xFF22C55E) else AccentOrange
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────
+// Review Bottom Sheet
+// ─────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReviewBottomSheet(
+    orderId: String,
+    orderItem: OrderItem,
+    isSubmitting: Boolean,
+    onDismiss: () -> Unit,
+    onSubmit: (rating: Double, comment: String, imageUri: Uri?) -> Unit
+) {
+    var rating by remember { mutableStateOf(0.0) }
+    var comment by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var imageDisplayUrl by remember { mutableStateOf("") }
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 40.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Handle bar
+            Box(
+                modifier = Modifier
+                    .width(40.dp).height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFFE0E0E0))
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            Text(
+                text = "Đánh giá sản phẩm",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1B2430)
+            )
+
+            // Tên sản phẩm
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = AccentOrange.copy(alpha = 0.08f)
+            ) {
+                Text(
+                    text = orderItem.productName,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AccentOrange
+                )
+            }
+
+            HorizontalDivider(color = Color(0xFFF0F0F0))
+
+            // Rating bar
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Điểm đánh giá *",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF424242)
+                )
+                RatingBar(
+                    selected = rating,
+                    onSelect = { rating = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            HorizontalDivider(color = Color(0xFFF0F0F0))
+
+            // Comment (optional)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Nhận xét (không bắt buộc)",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF424242)
+                )
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Chia sẻ cảm nhận của bạn về sản phẩm...", fontSize = 13.sp) },
+                    minLines = 3,
+                    maxLines = 5,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AccentOrange,
+                        unfocusedContainerColor = Color(0xFFFAFAFA),
+                        focusedContainerColor = Color(0xFFFAFAFA)
+                    )
+                )
+            }
+
+            HorizontalDivider(color = Color(0xFFF0F0F0))
+
+            // Image feedback (optional)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Ảnh feedback (không bắt buộc)",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF424242)
+                )
+                ImagePickerButton(
+                    currentImageUrl = imageDisplayUrl,
+                    isUploading = false,
+                    onImagePicked = { uri ->
+                        imageUri = uri
+                        imageDisplayUrl = uri.toString()
+                    },
+                    onRemoveImage = {
+                        imageUri = null
+                        imageDisplayUrl = ""
+                    },
+                    label = "Thêm ảnh đánh giá",
+                    previewHeight = 140.dp,
+                    accentColor = AccentOrange
+                )
+            }
+
+            // Submit button
+            Button(
+                onClick = {
+                    if (rating > 0.0) {
+                        onSubmit(rating, comment, imageUri)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (rating > 0.0) AccentOrange else Color(0xFFE0E0E0)
+                ),
+                enabled = rating > 0.0 && !isSubmitting
+            ) {
+                if (isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = if (rating > 0.0) "Gửi đánh giá" else "Vui lòng chọn điểm",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }
 

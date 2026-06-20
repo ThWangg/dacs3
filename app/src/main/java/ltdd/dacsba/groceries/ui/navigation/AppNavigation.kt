@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.navigation
+﻿package ltdd.dacsba.groceries.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -39,8 +39,7 @@ fun AppNavigation(navController: NavHostController) {
             startDestination = AppConstant.Routes.LOGIN
         ) {
 
-            // Auth routes
-            composable(
+composable(
                 route = "${AppConstant.Routes.LOGIN}?message={message}",
                 arguments = listOf(
                     androidx.navigation.navArgument("message") {
@@ -57,15 +56,13 @@ fun AppNavigation(navController: NavHostController) {
                 RegisterScreen(navController = navController)
             }
 
-            // Admin home screen
-            composable(AppConstant.Routes.ADMIN_HOME) {
+composable(AppConstant.Routes.ADMIN_HOME) {
                 MainAdminScreen(
                     onLogout = { onLogoutAction(null) }
                 )
             }
 
-            // Buyer home screen
-            composable(AppConstant.Routes.BUYER_HOME) {
+composable(AppConstant.Routes.BUYER_HOME) {
                 ltdd.dacsba.groceries.ui.screens.user.MainBuyerScreen(
                     parentNavController = navController,
                     onLogout = onLogoutAction,
@@ -77,8 +74,7 @@ fun AppNavigation(navController: NavHostController) {
                 )
             }
 
-            // Seller main screen (có bottom bar tích hợp sẵn)
-            composable(AppConstant.Routes.SELLER_HOME) {
+composable(AppConstant.Routes.SELLER_HOME) {
                 MainSellerScreen(
                     onLogout = onLogoutAction,
                     onSwitchToBuyer = {
@@ -89,8 +85,7 @@ fun AppNavigation(navController: NavHostController) {
                 )
             }
 
-            // Chat screens
-            composable("chat_list") {
+composable("chat_list") {
                 ChatListScreen(navController = navController)
             }
             composable(
@@ -106,12 +101,10 @@ fun AppNavigation(navController: NavHostController) {
             }
         }
 
-        // Nút Bong bóng Chat trôi nổi: Theo dõi route hiện tại để xác định đã đăng nhập hay chưa
-        val currentBackStackEntry by navController.currentBackStackEntryAsState()
+val currentBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = currentBackStackEntry?.destination?.route
 
-        // Nếu không ở màn hình Login và Register thì hiện bong bóng chat
-        val isAuthScreen = currentRoute == AppConstant.Routes.LOGIN || 
+val isAuthScreen = currentRoute == AppConstant.Routes.LOGIN || 
                            currentRoute == "${AppConstant.Routes.LOGIN}?message={message}" ||
                            currentRoute == AppConstant.Routes.REGISTER
 

@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.user
+﻿package ltdd.dacsba.groceries.ui.screens.user
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
@@ -42,31 +42,17 @@ import ltdd.dacsba.groceries.data.model.PaymentQrConfig
 import java.text.NumberFormat
 import java.util.Locale
 
-// ─── Màu sắc riêng cho màn hình thanh toán ────────────────────────────────────
 private val PayGreen = Color(0xFF22C55E)
 private val PayGreenLight = Color(0xFFDCFCE7)
 private val PayBlue = Color(0xFF3B82F6)
 private val PayBlueLight = Color(0xFFEFF6FF)
-private val PayOrange = AccentOrange   // Dùng lại từ BuyerHome.kt
+private val PayOrange = AccentOrange
 private val BgGray = Color(0xFFF8FAFC)
-private val TextPrimary = DarkNavy     // Dùng lại từ BuyerHome.kt
+private val TextPrimary = DarkNavy
 private val TextSecondary = Color(0xFF64748B)
 private val DividerColor = Color(0xFFE2E8F0)
 private val CardBg = Color.White
 
-/**
- * Màn hình thanh toán VietQR.
- *
- * Luồng:
- * 1. Hiển thị mã QR động (Coil AsyncImage từ VietQR.io API – không cần lib QR)
- * 2. Đếm ngược 60s → Tự ghi SUCCESS vào Firestore (giả lập webhook)
- * 3. addSnapshotListener bắt được → Tự động chuyển sang màn hình SUCCESS
- * 4. Nút "Đã chuyển khoản" → Bấm bất kỳ lúc nào để xác nhận ngay lập tức
- *
- * @param orderId ID đơn hàng
- * @param amount  Tổng tiền cần thanh toán (VND)
- * @param navController Navigation controller
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentQrScreen(
@@ -84,15 +70,13 @@ fun PaymentQrScreen(
     val addInfo = "DONHANG ${orderId.takeLast(8).uppercase()}"
     val qrUrl = config.buildQrImageUrl(amount, addInfo)
 
-    // Load thông tin seller rồi khởi động listener + countdown
-    LaunchedEffect(orderId, sellerId) {
-        viewModel.loadSellerConfig(sellerId)   // fetch tên + sinh STK theo seller
+LaunchedEffect(orderId, sellerId) {
+        viewModel.loadSellerConfig(sellerId)
         viewModel.startListening(orderId)
         viewModel.startCountdown()
     }
 
-    // Khi SUCCESS → chờ animation 2s rồi navigate về Orders
-    LaunchedEffect(paymentStatus) {
+LaunchedEffect(paymentStatus) {
         if (paymentStatus == PaymentStatus.SUCCESS) {
             delay(2200)
             navController.navigate(BuyerRoutes.ORDERS) {
@@ -122,7 +106,7 @@ fun PaymentQrScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // ── Màn hình LOADING (chờ fetch thông tin seller) ──────────────────────
+
             AnimatedVisibility(
                 visible = paymentStatus == PaymentStatus.LOADING,
                 enter = fadeIn(),
@@ -138,7 +122,7 @@ fun PaymentQrScreen(
                     }
                 }
             }
-            // ── Màn hình WAITING (QR + countdown) ─────────────────────────────
+
             AnimatedVisibility(
                 visible = paymentStatus == PaymentStatus.WAITING,
                 enter = fadeIn(),
@@ -155,8 +139,7 @@ fun PaymentQrScreen(
                 )
             }
 
-            // ── Màn hình SUCCESS (animation checkmark) ────────────────────────
-            AnimatedVisibility(
+AnimatedVisibility(
                 visible = paymentStatus == PaymentStatus.SUCCESS,
                 enter = fadeIn() + scaleIn(initialScale = 0.85f),
                 exit = fadeOut() + scaleOut()
@@ -167,7 +150,6 @@ fun PaymentQrScreen(
     }
 }
 
-// ─── Nội dung chính: Màn hình chờ thanh toán ──────────────────────────────────
 @Composable
 private fun WaitingPaymentContent(
     qrUrl: String,
@@ -181,8 +163,7 @@ private fun WaitingPaymentContent(
     val clipboard = LocalClipboardManager.current
     val formattedAmount = NumberFormat.getNumberInstance(Locale("vi", "VN")).format(amount)
 
-    // Progress cho vòng tròn đếm ngược
-    val progress = countdown.toFloat() / PaymentViewModel.COUNTDOWN_SECONDS.toFloat()
+val progress = countdown.toFloat() / PaymentViewModel.COUNTDOWN_SECONDS.toFloat()
     val countdownColor = when {
         countdown > 30 -> PayGreen
         countdown > 10 -> PayOrange
@@ -198,8 +179,7 @@ private fun WaitingPaymentContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        // ── Card QR chính ──────────────────────────────────────────────────────
-        Card(
+Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = CardBg),
@@ -212,7 +192,7 @@ private fun WaitingPaymentContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header logo VietQR giả lập
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -243,8 +223,7 @@ private fun WaitingPaymentContent(
 
                 HorizontalDivider(color = DividerColor)
 
-                // Ảnh QR tải từ VietQR.io API qua Coil (không cần thư viện QR)
-                SubcomposeAsyncImage(
+SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(qrUrl)
                         .crossfade(true)
@@ -286,8 +265,7 @@ private fun WaitingPaymentContent(
                     }
                 )
 
-                // ── Thông tin tài khoản ──
-                Surface(
+Surface(
                     color = Color(0xFFF8FAFC),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -326,8 +304,7 @@ private fun WaitingPaymentContent(
             }
         }
 
-        // ── Card đếm ngược + nút xác nhận ─────────────────────────────────────
-        Card(
+Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = CardBg),
@@ -340,7 +317,7 @@ private fun WaitingPaymentContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Vòng tròn đếm ngược
+
                 Box(contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
                         progress = { progress },
@@ -360,12 +337,11 @@ private fun WaitingPaymentContent(
                     }
                 }
 
-                // Mô tả trạng thái
-                Row(
+Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // Chấm nhấp nháy
+
                     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
                     val alpha by infiniteTransition.animateFloat(
                         initialValue = 0.3f,
@@ -398,8 +374,7 @@ private fun WaitingPaymentContent(
 
                 HorizontalDivider(color = DividerColor)
 
-                // Nút xác nhận thủ công
-                Button(
+Button(
                     onClick = onConfirm,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -443,13 +418,11 @@ private fun WaitingPaymentContent(
     }
 }
 
-// ─── Màn hình thành công ───────────────────────────────────────────────────────
 @Composable
 private fun PaymentSuccessContent(amount: Long, orderId: String) {
     val formattedAmount = NumberFormat.getNumberInstance(Locale("vi", "VN")).format(amount)
 
-    // Animation checkmark phóng to
-    val scaleAnim = remember { Animatable(0f) }
+val scaleAnim = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         scaleAnim.animateTo(
             targetValue = 1f,
@@ -460,8 +433,7 @@ private fun PaymentSuccessContent(amount: Long, orderId: String) {
         )
     }
 
-    // Hiệu ứng vòng tròn xung
-    val infiniteTransition = rememberInfiniteTransition(label = "success_pulse")
+val infiniteTransition = rememberInfiniteTransition(label = "success_pulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 1.15f,
@@ -485,7 +457,7 @@ private fun PaymentSuccessContent(amount: Long, orderId: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Icon check với gradient nền
+
             Box(
                 modifier = Modifier
                     .size(140.dp)
@@ -508,8 +480,7 @@ private fun PaymentSuccessContent(amount: Long, orderId: String) {
                 )
             }
 
-            // Text thành công
-            Column(
+Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -534,8 +505,7 @@ private fun PaymentSuccessContent(amount: Long, orderId: String) {
                 )
             }
 
-            // Card thông tin
-            Card(
+Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = PayGreenLight)
@@ -561,8 +531,7 @@ private fun PaymentSuccessContent(amount: Long, orderId: String) {
                 }
             }
 
-            // Loading chuyển trang
-            Row(
+Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -581,7 +550,6 @@ private fun PaymentSuccessContent(amount: Long, orderId: String) {
     }
 }
 
-// ─── Component: Một hàng thông tin tài khoản ──────────────────────────────────
 @Composable
 private fun AccountInfoRow(
     label: String,

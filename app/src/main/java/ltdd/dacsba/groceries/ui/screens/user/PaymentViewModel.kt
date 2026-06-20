@@ -1,4 +1,4 @@
-package ltdd.dacsba.groceries.ui.screens.user
+﻿package ltdd.dacsba.groceries.ui.screens.user
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,40 +15,24 @@ import ltdd.dacsba.groceries.data.constant.AppConstant
 import ltdd.dacsba.groceries.data.model.PaymentQrConfig
 import kotlin.math.abs
 
-/** Trạng thái thanh toán */
 enum class PaymentStatus {
-    LOADING,    // Đang tải thông tin seller
-    WAITING,    // Đang chờ xác nhận
-    SUCCESS,    // Thanh toán thành công
-    FAILED      // Thất bại / hết giờ
+    LOADING,
+    WAITING,
+    SUCCESS,
+    FAILED
 }
 
-/**
- * ViewModel quản lý màn hình thanh toán QR.
- *
- * Hai cơ chế xác nhận:
- * 1. [startListening] – addSnapshotListener Firestore: Tự động SUCCESS khi server/webhook ghi status="SUCCESS"
- * 2. [startCountdown] – Đếm ngược [COUNTDOWN_SECONDS]s rồi tự ghi SUCCESS vào Firestore (giả lập)
- * 3. [confirmManually] – Người dùng bấm nút "Đã chuyển khoản" → ghi SUCCESS ngay lập tức
- *
- * STK của seller được sinh **deterministic** từ sellerId hash:
- * cùng sellerId → luôn cho ra cùng một STK 12 chữ số (0–9), không random lại mỗi lần.
- */
 class PaymentViewModel : ViewModel() {
 
     companion object {
-        const val COUNTDOWN_SECONDS = 60  // Thời gian đếm ngược (giây)
-        private const val STK_LENGTH = 12  // Độ dài số tài khoản
+        const val COUNTDOWN_SECONDS = 60
+        private const val STK_LENGTH = 12
 
-        /**
-         * Sinh STK deterministic từ sellerId.
-         * Seed bằng hashCode → luôn cho ra cùng dãy số với cùng sellerId.
-         */
-        fun generateSellerAccountNo(sellerId: String): String {
+fun generateSellerAccountNo(sellerId: String): String {
             val seed = abs(sellerId.hashCode()).toLong()
             val rng = java.util.Random(seed)
             return buildString {
-                // Chữ số đầu không được là 0
+
                 append(rng.nextInt(9) + 1)
                 repeat(STK_LENGTH - 1) { append(rng.nextInt(10)) }
             }
@@ -57,8 +41,7 @@ class PaymentViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
 
-    // ── State flows ───────────────────────────────────────────────────────────
-    private val _paymentStatus = MutableStateFlow(PaymentStatus.LOADING)
+private val _paymentStatus = MutableStateFlow(PaymentStatus.LOADING)
     val paymentStatus: StateFlow<PaymentStatus> = _paymentStatus.asStateFlow()
 
     private val _countdownSeconds = MutableStateFlow(COUNTDOWN_SECONDS)
@@ -67,21 +50,14 @@ class PaymentViewModel : ViewModel() {
     private val _isConfirming = MutableStateFlow(false)
     val isConfirming: StateFlow<Boolean> = _isConfirming.asStateFlow()
 
-    /** Config QR của seller hiện tại (được load từ Firestore) */
-    private val _qrConfig = MutableStateFlow(PaymentQrConfig.DEFAULT)
+private val _qrConfig = MutableStateFlow(PaymentQrConfig.DEFAULT)
     val qrConfig: StateFlow<PaymentQrConfig> = _qrConfig.asStateFlow()
 
-    // ── Internal ──────────────────────────────────────────────────────────────
-    private var listenerRegistration: ListenerRegistration? = null
+private var listenerRegistration: ListenerRegistration? = null
     private var countdownJob: Job? = null
     private var currentOrderId: String = ""
 
-    /**
-     * Load thông tin seller từ Firestore để tạo PaymentQrConfig per-seller.
-     * - STK: sinh deterministic từ sellerId (cùng seller = cùng STK)
-     * - Chủ TK: username của seller (tên cửa hàng)
-     */
-    fun loadSellerConfig(sellerId: String) {
+fun loadSellerConfig(sellerId: String) {
         viewModelScope.launch {
             try {
                 val sellerDoc = db.collection(AppConstant.COLLECTION_USERS)
@@ -99,13 +75,13 @@ class PaymentViewModel : ViewModel() {
                     template = "compact2"
                 )
             } catch (e: Exception) {
-                // Fallback: vẫn dùng STK từ sellerId dù không lấy được tên
+
                 _qrConfig.value = PaymentQrConfig(
                     accountNo = generateSellerAccountNo(sellerId),
                     accountName = "CUA HANG"
                 )
             } finally {
-                // Chuyển sang WAITING sau khi load xong
+
                 if (_paymentStatus.value == PaymentStatus.LOADING) {
                     _paymentStatus.value = PaymentStatus.WAITING
                 }
@@ -113,11 +89,7 @@ class PaymentViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Bắt đầu lắng nghe realtime từ Firestore.
-     * Khi document payments/{orderId} có field status = "SUCCESS" → tự chuyển trạng thái.
-     */
-    fun startListening(orderId: String) {
+fun startListening(orderId: String) {
         currentOrderId = orderId
         listenerRegistration?.remove()
         listenerRegistration = db
@@ -135,38 +107,28 @@ class PaymentViewModel : ViewModel() {
             }
     }
 
-    /**
-     * Bắt đầu đếm ngược. Khi hết giờ tự ghi SUCCESS vào Firestore (giả lập thanh toán).
-     */
-    fun startCountdown() {
+fun startCountdown() {
         countdownJob?.cancel()
         _countdownSeconds.value = COUNTDOWN_SECONDS
         countdownJob = viewModelScope.launch {
-            for (remaining in COUNTDOWN_SECONDS downTo 1) {
+            for (remaining in (COUNTDOWN_SECONDS - 1) downTo 0) {
+                delay(1000)
                 if (_paymentStatus.value != PaymentStatus.WAITING) break
                 _countdownSeconds.value = remaining
-                delay(1000)
             }
-            // Hết đếm ngược → Ghi SUCCESS vào Firestore (giả lập webhook)
+
             if (_paymentStatus.value == PaymentStatus.WAITING) {
                 simulatePaymentSuccess()
             }
         }
     }
 
-    /**
-     * Người dùng bấm nút "Đã chuyển khoản" → ghi SUCCESS ngay vào Firestore
-     */
-    fun confirmManually() {
+fun confirmManually() {
         if (_paymentStatus.value != PaymentStatus.WAITING) return
         simulatePaymentSuccess()
     }
 
-    /**
-     * Ghi document payments/{orderId} status="SUCCESS" vào Firestore.
-     * Listener addSnapshotListener phía trên sẽ bắt được và tự update UI.
-     */
-    private fun simulatePaymentSuccess() {
+private fun simulatePaymentSuccess() {
         if (currentOrderId.isBlank()) {
             _paymentStatus.value = PaymentStatus.SUCCESS
             return
@@ -183,11 +145,11 @@ class PaymentViewModel : ViewModel() {
                 )
             )
             .addOnSuccessListener {
-                // Listener addSnapshotListener sẽ bắt được → _paymentStatus = SUCCESS
+
                 _isConfirming.value = false
             }
             .addOnFailureListener {
-                // Fallback: update UI trực tiếp nếu Firestore lỗi
+
                 _paymentStatus.value = PaymentStatus.SUCCESS
                 _isConfirming.value = false
             }
@@ -199,7 +161,7 @@ class PaymentViewModel : ViewModel() {
     }
 
     override fun onCleared() {
-        listenerRegistration?.remove()   // Quan trọng: Dọn dẹp listener tránh memory leak
+        listenerRegistration?.remove()
         countdownJob?.cancel()
         super.onCleared()
     }
