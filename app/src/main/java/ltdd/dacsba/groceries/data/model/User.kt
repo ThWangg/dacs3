@@ -1,4 +1,4 @@
-﻿package ltdd.dacsba.groceries.data.model
+package ltdd.dacsba.groceries.data.model
 
 import com.google.firebase.firestore.PropertyName
 
@@ -11,5 +11,6 @@ data class User(
     @PropertyName("isDeactivated")
     val isDeactivated: Boolean = false,
     val avatarUrl: String = "",
+    val walletBalance: Double = 0.0,
     val createdAt: Long = System.currentTimeMillis()
 )

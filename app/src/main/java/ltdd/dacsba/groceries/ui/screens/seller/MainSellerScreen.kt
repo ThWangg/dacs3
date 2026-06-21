@@ -1,4 +1,4 @@
-﻿package ltdd.dacsba.groceries.ui.screens.seller
+package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -29,6 +29,7 @@ object SellerRoutes {
     const val ADD_PRODUCT = "seller_add_product"
     const val EDIT_PRODUCT = "seller_edit_product"
     const val NOTIFICATIONS = "seller_notifications"
+    const val WALLET = "seller_wallet"
 }
 
 @Composable
@@ -116,6 +117,13 @@ val bottomNavItems = listOf(
             }
             composable(SellerRoutes.NOTIFICATIONS) {
                 SellerNotificationScreen(navController = navController, viewModel = sellerViewModel)
+            }
+
+            // Ví tiền seller
+            composable(SellerRoutes.WALLET) {
+                ltdd.dacsba.groceries.ui.screens.user.WalletTopUpScreen(
+                    navController = navController
+                )
             }
         }
     }

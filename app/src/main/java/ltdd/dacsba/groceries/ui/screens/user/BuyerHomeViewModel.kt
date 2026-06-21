@@ -1,4 +1,4 @@
-﻿package ltdd.dacsba.groceries.ui.screens.user
+package ltdd.dacsba.groceries.ui.screens.user
 
 import android.app.Application
 import android.net.Uri
@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import ltdd.dacsba.groceries.data.constant.AppConstant
@@ -19,6 +20,7 @@ import ltdd.dacsba.groceries.data.model.CartItem
 import ltdd.dacsba.groceries.data.repository.CartRepository
 import ltdd.dacsba.groceries.data.repository.UserTagProfileRepository
 import ltdd.dacsba.groceries.data.repository.ContentBasedFilteringEngine
+import ltdd.dacsba.groceries.data.repository.WalletRepository
 
 class BuyerHomeViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
@@ -42,15 +44,44 @@ var sellerRequestStatus = mutableStateOf<String?>(null)
     var isSubmittingRequest = mutableStateOf(false)
     var requestResult = mutableStateOf<String?>(null)
 
-var currentUser = mutableStateOf<User?>(null)
+    var currentUser = mutableStateOf<User?>(null)
     var isUploadingAvatar = mutableStateOf(false)
     var profileMessage = mutableStateOf<String?>(null)
+
+    // Wallet – dùng snapshot listener để tự cập nhật real-time
+    private val walletRepository = WalletRepository()
+    var walletBalance = mutableStateOf(0.0)
+    private var walletListener: ListenerRegistration? = null
 
     init {
         fetchProducts()
         checkSellerRequestStatus()
         loadUserProfile()
         loadRecommendations()
+        listenWalletBalance()
+    }
+
+    /** Lắng nghe real-time số dư ví từ Firestore – tự cập nhật ngay khi nạp tiền */
+    private fun listenWalletBalance() {
+        val uid = auth.currentUser?.uid ?: return
+        walletListener = db.collection(AppConstant.COLLECTION_WALLETS)
+            .document(uid)
+            .addSnapshotListener { snapshot, _ ->
+                val balance = snapshot?.getDouble("balance") ?: 0.0
+                walletBalance.value = balance
+            }
+    }
+
+    fun loadWalletBalance() {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            walletRepository.getBalance(uid).onSuccess { walletBalance.value = it }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        walletListener?.remove()
     }
 
 fun loadRecommendations() {

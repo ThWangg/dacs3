@@ -1,4 +1,4 @@
-﻿package ltdd.dacsba.groceries.ui.screens.user
+package ltdd.dacsba.groceries.ui.screens.user
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -26,6 +26,8 @@ object BuyerRoutes {
     const val PROFILE = "buyer_profile"
     const val CHECKOUT = "buyer_checkout"
     const val PAYMENT_QR = "payment_qr_screen"
+    const val WALLET_TOPUP = "wallet_topup"
+    const val WALLET_SUCCESS = "wallet_payment_success"
 }
 
 @Composable
@@ -110,15 +112,9 @@ val bottomNavItems = listOf(
             composable(
                 route = "${BuyerRoutes.PAYMENT_QR}/{orderId}/{amount}/{sellerId}",
                 arguments = listOf(
-                    androidx.navigation.navArgument("orderId") {
-                        type = androidx.navigation.NavType.StringType
-                    },
-                    androidx.navigation.navArgument("amount") {
-                        type = androidx.navigation.NavType.LongType
-                    },
-                    androidx.navigation.navArgument("sellerId") {
-                        type = androidx.navigation.NavType.StringType
-                    }
+                    androidx.navigation.navArgument("orderId") { type = androidx.navigation.NavType.StringType },
+                    androidx.navigation.navArgument("amount") { type = androidx.navigation.NavType.LongType },
+                    androidx.navigation.navArgument("sellerId") { type = androidx.navigation.NavType.StringType }
                 )
             ) { backStackEntry ->
                 val orderId = backStackEntry.arguments?.getString("orderId") ?: return@composable
@@ -128,6 +124,28 @@ val bottomNavItems = listOf(
                     orderId = orderId,
                     amount = amount,
                     sellerId = sellerId,
+                    navController = navController
+                )
+            }
+
+            // Màn hình ví tiền - nạp tiền
+            composable(BuyerRoutes.WALLET_TOPUP) {
+                WalletTopUpScreen(navController = navController)
+            }
+
+            // Màn hình thành công sau khi thanh toán bằng ví
+            composable(
+                route = "${BuyerRoutes.WALLET_SUCCESS}/{orderId}/{amount}",
+                arguments = listOf(
+                    androidx.navigation.navArgument("orderId") { type = androidx.navigation.NavType.StringType },
+                    androidx.navigation.navArgument("amount") { type = androidx.navigation.NavType.LongType }
+                )
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getString("orderId") ?: return@composable
+                val amount = backStackEntry.arguments?.getLong("amount") ?: 0L
+                WalletPaymentSuccessScreen(
+                    orderId = orderId,
+                    amount = amount,
                     navController = navController
                 )
             }

@@ -1,4 +1,4 @@
-﻿package ltdd.dacsba.groceries.ui.screens.user
+package ltdd.dacsba.groceries.ui.screens.user
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -12,11 +12,13 @@ import ltdd.dacsba.groceries.data.repository.OrderRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import ltdd.dacsba.groceries.data.constant.AppConstant
+import ltdd.dacsba.groceries.data.repository.WalletRepository
 import kotlinx.coroutines.tasks.await
 
 class BuyerCartViewModel : ViewModel() {
     private val cartRepository = CartRepository()
     private val orderRepository = OrderRepository()
+    private val walletRepository = WalletRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
     
@@ -188,4 +190,100 @@ val itemsBySeller = selectedItems.groupBy { it.sellerId }
             }
         }
     }
+
+    /**
+     * Đặt hàng và thanh toán ngay bằng ví điện tử.
+     * Trừ tiền → lưu đơn hàng → xóa giỏ hàng.
+     * onSuccess trả về (orderId, totalAmount) để hiển thị màn hình thành công.
+     */
+    fun placeOrderWithWallet(
+        shippingAddress: String,
+        note: String,
+        onSuccess: (orderId: String, totalAmount: Long) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) { onError("Vui lòng đăng nhập"); return }
+
+        viewModelScope.launch {
+            isLoading.value = true
+            try {
+                val userDoc = db.collection(AppConstant.COLLECTION_USERS).document(userId).get().await()
+                val buyerName = userDoc.getString("username") ?: "Khách hàng"
+
+                val selectedItems = cartItems.value.filter { selectedItemIds.value.contains(it.productId) }
+                if (selectedItems.isEmpty()) {
+                    onError("Chưa có sản phẩm nào được chọn")
+                    isLoading.value = false
+                    return@launch
+                }
+
+                val totalAmount = selectedItems.sumOf { it.price * it.quantity }
+
+                // Kiểm tra số dư trước (không trừ ngay)
+                val balanceResult = walletRepository.getBalance(userId)
+                val balance = balanceResult.getOrElse { 0.0 }
+                if (balance < totalAmount) {
+                    onError("Số dư ví không đủ (${java.text.NumberFormat.getNumberInstance(java.util.Locale("vi","VN")).format(balance)}đ)")
+                    isLoading.value = false
+                    return@launch
+                }
+
+                // Deduct theo từng seller – mỗi seller được cộng tiền tương ứng
+                val itemsBySeller = selectedItems.groupBy { it.sellerId }
+                for ((sellerId, items) in itemsBySeller) {
+                    val sellerTotal = items.sumOf { it.price * it.quantity }
+                    val deductResult = walletRepository.deduct(
+                        userId = userId,
+                        amount = sellerTotal,
+                        note = "Thanh toán đơn hàng",
+                        sellerId = sellerId
+                    )
+                    if (deductResult.isFailure) {
+                        onError(deductResult.exceptionOrNull()?.message ?: "Lỗi trừ tiền ví")
+                        isLoading.value = false
+                        return@launch
+                    }
+
+                    // Lưu đơn hàng cho seller này
+                    val orderItems = items.map {
+                        OrderItem(
+                            productId = it.productId,
+                            productName = it.productName,
+                            productImageUrl = it.productImageUrl,
+                            quantity = it.quantity,
+                            priceAtOrder = it.price,
+                            unit = it.unit
+                        )
+                    }
+                    val order = Order(
+                        buyerId = userId,
+                        buyerName = buyerName,
+                        sellerId = sellerId,
+                        items = orderItems,
+                        totalAmount = sellerTotal,
+                        shippingAddress = shippingAddress,
+                        note = note
+                    )
+                    orderRepository.placeOrder(order)
+                }
+
+                // Xóa giỏ hàng
+                for (item in selectedItems) {
+                    cartRepository.removeFromCart(userId, item.productId)
+                }
+                selectedItemIds.value = emptySet()
+                loadCart()
+
+                val generatedOrderId = java.util.UUID.randomUUID().toString()
+                onSuccess(generatedOrderId, totalAmount.toLong())
+
+            } catch (e: Exception) {
+                onError(e.message ?: "Đã có lỗi xảy ra")
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
 }
+

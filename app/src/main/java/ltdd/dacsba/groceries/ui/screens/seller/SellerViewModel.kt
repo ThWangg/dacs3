@@ -1,10 +1,11 @@
-﻿package ltdd.dacsba.groceries.ui.screens.seller
+package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import ltdd.dacsba.groceries.data.constant.AppConstant
@@ -29,14 +30,33 @@ class SellerViewModel : ViewModel() {
 var addSuccess = mutableStateOf(false)
     var updateSuccess = mutableStateOf(false)
 
-var totalProducts = mutableStateOf(0)
+    var totalProducts = mutableStateOf(0)
     var totalSold = mutableStateOf(0)
     var avgRating = mutableStateOf(0.0)
     var totalStock = mutableStateOf(0)
     var activities = mutableStateOf<List<SellerActivity>>(emptyList())
 
+    // Wallet seller – real-time listener
+    var walletBalance = mutableStateOf(0.0)
+    private var walletListener: ListenerRegistration? = null
+
     init {
         refreshData()
+        listenWalletBalance()
+    }
+
+    private fun listenWalletBalance() {
+        val uid = auth.currentUser?.uid ?: return
+        walletListener = db.collection(AppConstant.COLLECTION_WALLETS)
+            .document(uid)
+            .addSnapshotListener { snap, _ ->
+                walletBalance.value = snap?.getDouble("balance") ?: 0.0
+            }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        walletListener?.remove()
     }
 
     fun refreshData() {

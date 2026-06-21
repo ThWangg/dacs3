@@ -1,4 +1,4 @@
-﻿package ltdd.dacsba.groceries.ui.screens.seller
+package ltdd.dacsba.groceries.ui.screens.seller
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,6 +71,7 @@ fun SellerDashboardScreen(
     val totalStock by viewModel.totalStock
     val activities by viewModel.activities
     val isLoading by viewModel.isLoading
+    val walletBalance by viewModel.walletBalance
 
     SellerDashboardContent(
         productCount = productCount,
@@ -78,8 +80,10 @@ fun SellerDashboardScreen(
         totalStock = totalStock,
         activities = activities,
         isLoading = isLoading,
+        walletBalance = walletBalance,
         onRefresh = { viewModel.refreshData() },
-        onNotificationClick = { navController.navigate(SellerRoutes.NOTIFICATIONS) }
+        onNotificationClick = { navController.navigate(SellerRoutes.NOTIFICATIONS) },
+        onWalletClick = { navController.navigate(SellerRoutes.WALLET) }
     )
 }
 
@@ -91,8 +95,10 @@ fun SellerDashboardContent(
     totalStock: Int,
     activities: List<SellerActivity>,
     isLoading: Boolean,
+    walletBalance: Double = 0.0,
     onRefresh: () -> Unit,
-    onNotificationClick: () -> Unit
+    onNotificationClick: () -> Unit,
+    onWalletClick: () -> Unit = {}
 ) {
     var visibleCount by remember { mutableStateOf(3) }
 
@@ -110,30 +116,46 @@ fun SellerDashboardContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text(
+                androidx.compose.material3.Text(
                     text = "Dashboard",
                     style = TextStyle(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                 )
-                Text(
+                androidx.compose.material3.Text(
                     text = "Your status",
                     color = Color.Gray
                 )
             }
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Chip số dư ví seller
+                val fmtBalance = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(walletBalance)
+                Surface(
+                    onClick = onWalletClick,
+                    shape = RoundedCornerShape(20.dp),
+                    color = SellerGreen.copy(alpha = 0.15f),
+                    modifier = Modifier.height(34.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp)
+                    ) {
+                        androidx.compose.material3.Text("💰", fontSize = 13.sp)
+                        Spacer(Modifier.width(4.dp))
+                        androidx.compose.material3.Text(
+                            "${fmtBalance}đ",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SellerGreen
+                        )
+                    }
+                }
                 IconButton(onClick = onNotificationClick) {
-                    Icon(
-                        Icons.Default.Notifications,
-                        contentDescription = null,
-                        tint = Color.Gray)
+                    Icon(Icons.Default.Notifications, contentDescription = null, tint = Color.Gray)
                 }
                 IconButton(onClick = onRefresh) {
-                    Icon(
-                        Icons.Default.Refresh,
-                        contentDescription = null,
-                        tint = Color.Gray)
+                    Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.Gray)
                 }
             }
         }
@@ -157,7 +179,7 @@ fun SellerDashboardContent(
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Total Product",
+                    title = "Sản phẩm",
                     value = productCount.toString(),
                     icon = Icons.Default.ShoppingCart,
                     containerColor = Color(0xFFE3F2FD),
@@ -165,7 +187,7 @@ fun SellerDashboardContent(
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Sold",
+                    title = "Đã bán",
                     value = totalSold.toString(),
                     icon = Icons.Default.CheckCircle,
                     containerColor = Color(0xFFE8F5E9),
@@ -181,7 +203,7 @@ Row(
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Rating",
+                    title = "Đánh giá",
                     value = "%.1f ★".format(avgRating),
                     icon = Icons.Default.Star,
                     containerColor = Color(0xFFFFF3E0),
@@ -189,7 +211,7 @@ Row(
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Stock",
+                    title = "Tồn kho",
                     value = totalStock.toString(),
                     icon = Icons.Default.List,
                     containerColor = Color(0xFFF3E5F5),
@@ -201,7 +223,7 @@ Row(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Recent activity",
+            text = "Hoạt động gần đây",
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp
         )
@@ -428,7 +450,9 @@ fun SellerDashboardPreview() {
         totalStock = 1250,
         activities = emptyList(),
         isLoading = false,
+        walletBalance = 250000.0,
         onRefresh = {},
-        onNotificationClick = {}
+        onNotificationClick = {},
+        onWalletClick = {}
     )
 }

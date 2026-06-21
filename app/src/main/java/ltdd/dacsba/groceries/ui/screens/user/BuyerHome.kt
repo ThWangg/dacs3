@@ -138,7 +138,8 @@ fun BuyerHomeScreen(
         ) {
             BuyerHomeHeader(
                 viewModel = viewModel,
-                onSearchClick = { isSearchVisible = !isSearchVisible }
+                onSearchClick = { isSearchVisible = !isSearchVisible },
+                onWalletClick = { navController?.navigate(BuyerRoutes.WALLET_TOPUP) }
             )
             BuyerHomeBody(
                 viewModel = viewModel,
@@ -155,8 +156,11 @@ fun BuyerHomeScreen(
 @Composable
 fun BuyerHomeHeader(
     viewModel: BuyerHomeViewModel = viewModel(),
-    onSearchClick: () -> Unit
+    onSearchClick: () -> Unit,
+    onWalletClick: () -> Unit = {}
 ) {
+    val walletBalance by viewModel.walletBalance
+    val formattedBalance = java.text.NumberFormat.getNumberInstance(java.util.Locale("vi", "VN")).format(walletBalance)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -180,9 +184,31 @@ fun BuyerHomeHeader(
                 )
             }
 
-Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
 
-Surface(
+                // Chip số dư ví
+                Surface(
+                    onClick = onWalletClick,
+                    shape = RoundedCornerShape(20.dp),
+                    color = AccentOrange.copy(alpha = 0.12f),
+                    modifier = Modifier.height(34.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp)
+                    ) {
+                        Text("Số dư ", fontSize = 13.sp)
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "${formattedBalance}đ",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AccentOrange
+                        )
+                    }
+                }
+
+                Surface(
                     modifier = Modifier.size(36.dp),
                     shape = CircleShape,
                     color = Color(0xFFF7F7F7),

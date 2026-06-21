@@ -9,6 +9,8 @@ object AppConstant {
     const val COLLECTION_SELLER_REQUESTS = "seller_requests"
     const val COLLECTION_PAYMENTS = "payments"
     const val COLLECTION_REVIEWS = "reviews"
+    const val COLLECTION_WALLETS = "wallets"
+    const val COLLECTION_WALLET_TRANSACTIONS = "wallet_transactions"
 
     object Roles {
         const val ADMIN = "ADMIN"
